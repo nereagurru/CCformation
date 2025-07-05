@@ -10,7 +10,7 @@
 ! output_number - nout - output number of file
 ! --------------------------------------------------------------------------------
 ! Data
-! /swarms/swarmsout - data of the swarms (id, r, z, St, m, velr, velz)
+! /swarms/swarmsout - data of the swarms (id, m, r (in AU), z (in AU), St, f_CH, rigid, rigid_mass, tfor (in year), plt)
 ! /times/timesout - snapshottime of the data
 ! /resdt/resdtout - timestep at that time
 ! --------------------------------------------------------------------------------
