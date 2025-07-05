@@ -1,4 +1,4 @@
-! this module reads parameters from params.par file
+! this module reads parameters from params.par file and will create a file for output
 module parameters
     
    use constants,                only: year, AU, pi, third
@@ -37,12 +37,12 @@ module parameters
    integer                             :: nbins    ! number of bins for mass histograms
    integer                             :: fout     ! steps between outputs
    real                                :: alphat   ! gas disk properties
-   real                                :: prop_CH ! how much percentage of the total mass will be CAI, AOA and CH
-   real                                :: aCH_min ! size of particles
-   real                                :: aCH_max, zeta ! size of particles (used when size distribution)
-   real                                :: stmin  ! minimum St to trigger SI
-   real                                :: plt_eff ! planetesimal formation efficiency
-   character(len = 200)                :: disk_path = ".disk/PE/disk_midalpha/"
+   real                                :: prop_CH  ! how much percentage of the total mass will be rigid
+   real                                :: aCH_min  ! minimum size of rigid particles
+   real                                :: aCH_max, zeta ! maximum size of rigid particle and distribution index
+   real                                :: stmin    ! minimum St to trigger SI
+   real                                :: plt_eff  ! planetesimal formation efficiency
+   character(len = 200)                :: disk_path = ".disk/"
    character(len = 200)                :: sim_path = "default/", output_path
    logical                             :: db_data  ! write out files for sanity checks?
    character(len=100)                  :: datadir  ! data directory to write the data into
@@ -50,12 +50,12 @@ module parameters
    real, protected                     :: con2  ! optimization
    integer                             :: nzone_min ! for grid
 #ifdef GLOBAL
-   character(len=100)                  :: feedingdir
+   character(len=100)                  :: feedingdir ! where do we storage data for local simulation later?
 #endif
 #ifdef LOCAL_SIM
    character(len=100)                  :: feedingdir
-   integer :: nzone_max ! for grid
-   integer :: Nmax
+   integer :: nzone_max       ! maximum number of particles per grid
+   integer :: Nmax            ! constant number of particles throughout the simulation
 #endif
 
 
@@ -248,7 +248,8 @@ module parameters
       Ntot = ncell * nr * nz
       con1 = pi**third * (0.75 / matdens)**(2. * third) ! due to ridens != matdens, this is not const anymore 
       con2 = (0.75 / pi / matdens)**third
-      
+
+      ! create files for output if they do not exist yet
       close(fh)
       write(command,*) './directory.sh '//trim(output_path)
       CALL SYSTEM(command)
