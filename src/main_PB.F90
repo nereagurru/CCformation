@@ -90,11 +90,6 @@ program main
    real :: prop_const ! fraction of rigid/fragile at the time given
    integer :: Nfeed_ri_lagun
 #endif
-#ifdef TEST_NO_EVOL
-   integer :: old_size, new_size
-   type(swarm), dimension(:), allocatable :: temp_tot
-   real :: feeding_fux
-#endif
    ! random number generator initialization
    call init_random_seed
 
@@ -121,14 +116,6 @@ program main
 #endif
                           &)
       
-      write(*,*) 'Not is ' , Ntot
-      write(*,*) 'resdt is ' , resdt/year
-#ifdef LOCAL_SIM
-      write(*,*) 'imax is ' , imax
-#endif
-      write(*,*) time/year, nout, mswarm
-      write(*,*) '  restart read!'
-
       timeofnextout = time + dtime
       m0 = 4. * third * pi * r0**3 * matdens ! CREATE a function in initproblem to calculate this
       mCH_min = 4. * third * pi * (aCH_min)**3 * ridens
@@ -158,8 +145,7 @@ program main
       write(*,*) 'init time is ', time/year
 #ifdef LOCAL_SIM
       Ntot = Nmax
-#endif
-      write(*,*) "Total particle number is ", Ntot
+
 
 #ifdef ZERO_D
       call init_swarms_OD(Ntot, temp_swrm, time)
@@ -167,7 +153,6 @@ program main
       call init_swarms_PB2(Ntot, temp_swrm, time)
 #endif
 
-      write(*,*) "Total particle number is ", Ntot
 
 #ifdef GLOBAL
       last_time = time
@@ -177,40 +162,37 @@ program main
 
    endif
 
-   write(*,*) 'succeed'
+   ! calculate critical dust-to-gas ratio for planetesimal formation
    Zcrit = 10.**(0.15*(log10(alphat))**2. -0.24*log10(stmin)*log10(alphat) -1.48*log10(stmin) &
             + 1.18*log10(alphat)) ! Lim et al. (2024) eq. 19
 
-   write(*,*) 'Zcrit is ', Zcrit
    
 
 
 #ifdef LOCAL_SIM
-if (restart) then
-   Nplt_tot = count(temp_swrm(:)%plt .eq. 1) 
-   write(*,*) 'Nplt_tot', Nplt_tot, ' and ', size(temp_swrm) - Nmax
+if (restart) then                                  ! restart simulation
+   Nplt_tot = count(temp_swrm(:)%plt .eq. 1)       ! How many planetesimals formed so far
 
-   Nrem =  Nmax - (size(temp_swrm) - Nplt_tot)
+   Nrem =  Nmax - (size(temp_swrm) - Nplt_tot)     ! How many need to be added/removed to keep constant number of particles?
      
-   write(*,*) 'Nrem is ', Nrem
 
    allocate(sim_swrm(Nmax))
-   if (Nrem>0) then ! add extra particles
-      j = 0 
-      jadd = 0
-      i_plt = 0
-      allocate(temp_arr(size(temp_swrm))) ! because we do j+j_add, we dont wanna take any particle that has been modified
+   if (Nrem>0) then                                ! add Nrem particles by creating copies
+      j = 0                                        ! counter for all particles
+      jadd = 0                                     ! counter for extra
+      i_plt = 0                                    ! counter for particles with plt==1
+      allocate(temp_arr(size(temp_swrm)))          ! create a temporary array
       temp_arr = temp_swrm
       deallocate(temp_swrm)
       allocate(temp_swrm(Nplt_tot+Nmax))
       do i=1, size(temp_arr)
-         if (temp_arr(i)%rdis > smallr) then ! bring particles that will still be simulated to front
-               prob = real(Nrem-jadd)/real(Nmax-Nrem-j)
+         if (temp_arr(i)%rdis > smallr) then       ! if particle outside evaporation radius, save particle
+               prob = real(Nrem-jadd)/real(Nmax-Nrem-j)  ! probability of copying this particle depends on how many we copied before (we want an exact number!)
                j = j + 1
-               sim_swrm(j+jadd) = temp_arr(i)
-               temp_swrm(Nplt_tot+j+jadd) = temp_arr(i)
+               sim_swrm(j+jadd) = temp_arr(i)            ! save particle in sim_swrm
+               temp_swrm(Nplt_tot+j+jadd) = temp_arr(i)  ! save particle in temp_swrm (where plt_arr + sim_swrm)
                call random_number(x)
-               if (x<prob) then
+               if (x<prob) then                          ! do we copy this particle?
                   Ntot = Ntot + 1 
                   jadd = jadd + 1
                   sim_swrm(j+jadd) = temp_arr(i)
@@ -219,24 +201,23 @@ if (restart) then
                   temp_swrm(Nplt_tot+j+jadd)%idnr = Ntot
                   
                endif
-         else if (temp_arr(i)%plt .eq. 1) then
+         else if (temp_arr(i)%plt .eq. 1) then    ! if particle is a planetesimal, save it in temp_swrm
             i_plt = i_plt + 1
             temp_swrm(i_plt) = temp_arr(i)
          endif
       enddo
-      write(*,*) 'j and jadd ', j, jadd, ' while Nrem', Nrem
       j = j + jadd
       deallocate(temp_arr)
-   else if (Nrem<0) then ! remove extra particles
+   else if (Nrem<0) then ! remove extra particles; same as before but choose randomly the one to remove except for copying
       j = 0
       jadd = 0
       i_plt = 0
-      allocate(temp_arr(size(temp_swrm))) ! because we do j+j_add, we dont wanna take any particle that has been modified
+      allocate(temp_arr(size(temp_swrm)))
       temp_arr = temp_swrm
       deallocate(temp_swrm)
       allocate(temp_swrm(Nplt_tot+Nmax))
       do i=1, size(temp_arr)
-         if (temp_arr(i)%rdis > smallr) then ! bring particles that will still be simulated to front
+         if (temp_arr(i)%rdis > smallr) then
             write(*,*) j, jadd
             prob = real(-Nrem-jadd)/real(Nmax-Nrem-j)
             call random_number(x)
@@ -252,19 +233,17 @@ if (restart) then
          else if (temp_arr(i)%plt .eq. 1) then
             i_plt = i_plt + 1
             temp_swrm(i_plt) = temp_arr(i)
-
          endif
       enddo
-      write(*,*) 'j and jrem', j, jadd, ' while Nrem', Nrem
       j = j - jadd
       deallocate(temp_arr) 
-   else
+   else                                      ! don't add/remove particles    
       j = 0
       i_plt = 0
-      allocate(temp_arr(size(temp_swrm))) ! because we do j+j_add, we dont wanna take any particle that has been modified
+      allocate(temp_arr(size(temp_swrm)))   
       temp_arr = temp_swrm
       do i=1, size(temp_arr)
-         if (temp_arr(i)%rdis > smallr) then ! bring particles that will still be simulated to front
+         if (temp_arr(i)%rdis > smallr) then 
             j = j + 1
             sim_swrm(j) = temp_arr(i)
             temp_swrm(Nplt_tot+j) = temp_arr(i)
@@ -273,25 +252,13 @@ if (restart) then
             temp_swrm(i_plt) = temp_arr(i)
          endif
       enddo
-      write(*,*) 'j ', j, ' while and Nrem', Nrem
       deallocate(temp_arr) 
 
    endif
 
-
-  write(*,*) 'here I should have 0==',   count(sim_swrm(:)%rdis<smallr)         
-  write(*,*) 'here I should have 0 ==', count(sim_swrm(:)%plt .eq. 1)
-  write(*,*) 'here I should have ', Nplt_tot,'==',   count(temp_swrm(:)%plt .eq. 1)         
-  write(*,*) 'here I should have 0 ==', count(sim_swrm(:)%plt .eq. 1)
-  write(*,*) 'here I should have reasonable numbers between 0 and ', Ntot, ':'
-  write(*,*) maxval(sim_swrm(:)%idnr), minval(sim_swrm(:)%idnr), maxval(temp_swrm(:)%idnr), minval(temp_swrm(:)%idnr)
-#ifdef TEST_CONST_FLUX
-      nout_feed = 317
-#else
-      nout_feed = 0
-#endif
-  
-  
+  ! create array of particles that will be adding later from global simulation
+  ! find the output that matches with out simulation
+  nout_feed = 0
   do while (.True.)
       write(filename,'(a7,i5.5,a3)') 'swarms-',nout_feed,'.h5'
       open_file = trim(feedingdir)//trim(filename)
@@ -303,42 +270,9 @@ if (restart) then
 
   end do
 
-#ifdef TEST_NO_EVOL
-   deallocate(feeding_swrm_tot)
-   allocate(feeding_swrm_tot(0))  ! start with empty array
-
-   do i = 1, 10
-      write(filename,'(a7,i5.5,a3)') 'swarms-',nout_feed,'.h5'
-      open_file = trim(feedingdir)//trim(filename)
-    ! Read the current file into a temporary array
-      call hdf5_file_read(open_file, Nfluxtot, temp, nout_feed, mswarm_feeding, time_no, time_no, imax, .True.)
-
-      ! Resize and append
-      old_size = size(feeding_swrm_tot)
-      new_size = old_size + size(temp)
-      allocate(temp_tot(new_size))
-
-      if (old_size > 0) temp_tot(1:old_size) = feeding_swrm_tot
-      temp_tot(old_size+1:new_size) = temp
-
-      deallocate(feeding_swrm_tot)
-      allocate(feeding_swrm_tot(new_size))
-      feeding_swrm_tot = temp_tot
-
-      deallocate(temp_tot)
-      deallocate(temp)
-
-      nout_feed = nout_feed + 1
-   end do
-   Nfluxtot = size(feeding_swrm_tot)
-   Ncount = Nfluxtot
-   ! how much mass per unit time enters
-   feeding_fux = Nfluxtot*mswarm_feeding/(maxval(feeding_swrm_tot(:)%tfor)-minval(feeding_swrm_tot(:)%tfor))
-#else
 
 #ifdef TEST_CONST_FLUX
-   prop_const = 0.5 !3120 !real(sum(feeding_swrm_tot(:)%rigid))/real(size(feeding_swrm_tot))
-   write(*,*) "probability of initiating a rigid will be ", prop_const
+   prop_const = 0.5
 #endif
    ! correction in case some swarms in the feeding flux were formed before "time"
    Ncount = 0
@@ -377,47 +311,13 @@ if (restart) then
    Nfluxtot = Ncount
    deallocate(temp)
 
-   write(*,*) 'Nflux is ', Nfluxtot, ' and feeding swarm mass is ', mswarm_feeding
-#endif 
-! deleate up, from NO_EVOL
-
-else
+else      ! no restart
    Nplt_tot = 0
    allocate(sim_swrm(Nmax))
    sim_swrm = temp_swrm
+
+   ! choose first feeding file
    nout_feed = 0
-
-#ifdef TEST_NO_EVOL
-
-   allocate(feeding_swrm_tot(0))  ! start with empty array
-
-   do i = 1, 10
-      write(filename,'(a7,i5.5,a3)') 'swarms-',nout_feed,'.h5'
-      open_file = trim(feedingdir)//trim(filename)
-    ! Read the current file into a temporary array
-      call hdf5_file_read(open_file, Nfluxtot, temp, nout_feed, mswarm_feeding, time_no, time_no, imax, .True.)
-
-      ! Resize and append
-      old_size = size(feeding_swrm_tot)
-      new_size = old_size + size(temp)
-      allocate(temp_tot(new_size))
-
-      if (old_size > 0) temp_tot(1:old_size) = feeding_swrm_tot
-      temp_tot(old_size+1:new_size) = temp
-
-      deallocate(feeding_swrm_tot)
-      allocate(feeding_swrm_tot(new_size))
-      feeding_swrm_tot = temp_tot
-
-      deallocate(temp_tot)
-      deallocate(temp)
-
-      nout_feed = nout_feed + 1
-   end do
-   Nfluxtot = size(feeding_swrm_tot)
-   ! how much mass per unit time enters
-   feeding_fux = Nfluxtot*mswarm_feeding/(maxval(feeding_swrm_tot(:)%tfor)-minval(feeding_swrm_tot(:)%tfor))
-#else
    write(filename,'(a7,i5.5,a3)') 'swarms-',nout_feed,'.h5'
    open_file = trim(feedingdir)//trim(filename)
    write(*,*) open_file
@@ -425,12 +325,11 @@ else
    call hdf5_file_read(open_file, Nfluxtot, feeding_swrm_tot, nout_feed, mswarm_feeding, time_no, time_no, imax, .True.)
    Nfluxtot = size(feeding_swrm_tot)
    nout_feed = nout_feed + 1
-#endif
-! from No_EVOL
+
 
 endif
 
-
+! the following variables save info about cumulative mass that has entered or leaved the simulation
 Mfeed = 0.
 Mfeed_ri = 0.
 Mleak = 0.
@@ -447,10 +346,10 @@ imax = size(temp_swrm)
 #endif
 
 
-   ! initial time the formation of the first swarms
+   ! initial time, the formation of the first swarms
    timeofnextout = time
 
-   write(*,*) ' Making grid for the first time...'
+   ! Making grid for the first time
    call make_grid(sim_swrm, bin, rbin, nr, nz, smallr,totmass, ncolls)
 
    ncolls(:,:) = 1
@@ -459,31 +358,12 @@ imax = size(temp_swrm)
       do j=1, size(g%zce,dim=2)
          kont = kont + size(bin(i, j)%p)
       enddo
-      write(*,*) i, "grid. rmin, rcen, rout, part num :", g%rlo(i)/AU,g%rce(i)/AU, g%rup(i)/AU , kont
    enddo
-   write(*,*) 'going into the main loop...'
 
-
-!REMOVE below
-#ifdef PURE_MATRIX_TEST
-   do i=1, size(sim_swrm)
-      sim_swrm(i)%f_CH = 0.
-      sim_swrm(i)%f_matrix = 1.
-      sim_swrm(i)%rigid = 0
-      sim_swrm(i)%rigid_mass = 0.
-      sim_swrm(i)%mass = sim_swrm(i)%mass*(sim_swrm(i)%dens/matdens)**(2.*third)
-      sim_swrm(i)%dens = matdens
-   enddo
-#endif
-!REMOVE upper
 
    iter = 0
    ! ------------------- MAIN LOOP -------------------------------------------------------------------------------------
    do while (time < tend)
-
-      ! this preprocessor is to demonstrate that the leaking vs. feeding flux changes over time
-      ! due to a fixed bottom 
-
 
 #ifdef ZERO_D
       resdt = 1./omegaK(minval(sim_swrm(:)%rdis), time)
