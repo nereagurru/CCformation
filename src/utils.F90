@@ -1,5 +1,8 @@
-module utils
+! Module for 2D and 1D interpolation functions
 ! code from astrofrog/fortranlib: https://github.com/astrofrog/fortranlib
+
+module utils
+
    implicit none
 
    public :: interp2d, interp1d
