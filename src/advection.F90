@@ -35,7 +35,7 @@ module advection
       integer :: Nflux
 #endif
 
-      ! loop over all the particles: calculating advection velocities
+      ! loop over all the particles: calculating velocities
 #ifdef GLOBAL
       !$OMP PARALLEL DO SHARED(Nflux) PRIVATE(particle,vs, vr, velr, velv, vn) SCHEDULE(DYNAMIC)
 #else
