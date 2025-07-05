@@ -14,11 +14,7 @@ module ppplts
    
    contains
    
-   subroutine planetesimal_formation(nr, rbin, swrm, dtime, realtime &
-#ifdef SI_MAX_EFF
-                                    &, Zcrit, etamax &
-#endif
-      & )
+   subroutine planetesimal_formation(nr, rbin, swrm, dtime, realtime)
       implicit none
       integer, intent(in)                                             :: nr
       type(swarm), dimension(:), allocatable, target                  :: swrm
@@ -29,20 +25,13 @@ module ppplts
       integer                                                         :: j
       real                                                            :: nremv_float  
       real                                                            :: x ! random variable
-#ifdef SI_MAX_EFF
-      real :: Zcrit, etamax
-#endif
-      plts_mass = 0.
 
-      open(32,file=trim(output_path)//trim('minsize.dat'), position='append')
-      open(33,file=trim(output_path)//trim('minmass.dat'), position='append')
+      plts_mass = 0.
      
       nparts_tot = size(rbin(nr)%p(:)) 
 
-         
       ! my total mettalicity; surface dust-to-gas ratio
       Ztot = real(nparts_tot) * mswarm / (pi*g%rup(nr)**2-pi*g%rlo(nr)**2) / sigmag(g%rce(nr),realtime)
-      
 
       ! how many particles do I have above the St = stmin limit?
       nparts = 0
@@ -53,9 +42,6 @@ module ppplts
       ! estimate number of particles to remove, following Eq. 16 in Drazkowska anbd Dullemond 2016
       nremv_float = dtime*plt_eff/(2.*pi)*omegaK(g%rce(nr), realtime)*real(nparts)
 
-#ifdef SI_MAX_EFF
-      nremv_float = (etamax-Zcrit)*sigmag(g%rce(nr),realtime)*(pi*g%rup(nr)**2-pi*g%rlo(nr)**2)/mswarm
-#endif
       ! choose how to round the decimal part.
       ! this part of code is specially relevant when dtime or plt_eff are small
       ! if we simply use floor we underestimate planetesimal formation
@@ -66,15 +52,8 @@ module ppplts
       endif
 
       write(*,*) "We remove ", nremv, " particles"
-      write(32,*) realtime/year, sum(rbin(nr)%p(:)%stnr) / real(nparts_tot), maxval(rbin(nr)%p(:)%stnr), &
-                 minval(rbin(nr)%p(:)%stnr), nparts_tot, nparts
 
-         
-      write(33,*) realtime/year, real(nremv) * mswarm, real(nparts) * mswarm, Ztot
       call form_planetesimals(swrm, rbin, nr, nparts, nparts_tot, nremv)
-                        
-      close(32)
-      close(33)
    
       return
    end subroutine planetesimal_formation
@@ -116,7 +95,6 @@ module ppplts
          nparts = nparts - 1
          nparts_tot = nparts_tot-1
          nremv = nremv-1
-         write(*,*) 'removing particle', i
       enddo
       
       plts_mass = plts_mass + mclump
