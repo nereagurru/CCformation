@@ -47,27 +47,26 @@ module initproblem
       ! monomer mass
       m0 = 4. * third * pi * r0**3 * matdens
 
-      ! refractory mass minimum
+      ! refractory mass minimum and maximum
       mCH_min = 4. * third * pi * aCH_min**3 * ridens
-      write(*,*) 'mch min is ', mCH_min
-
       mCH_max = 4. * third * pi * aCH_max**3 * ridens
 
       if (.not.allocated(swrm)) allocate(swrm(Ntot))
 
       ! initializing the particles
       do i = 1, Ntot
-         swrm(i)%idnr = i
-         swrm(i)%plt = 0
-         swrm(i)%tfor = time
+         swrm(i)%idnr = i               ! index
+         swrm(i)%plt = 0                ! they are not planetesimals
+         swrm(i)%tfor = time            ! time when they are initialized
 
+         ! choose initial position randomly (only for 0D, density expected to be near constant in small range)
+         call random_number(x)
+         swrm(i)%rdis =  minrad0 + (maxrad0 - minrad0)*x 
+         call random_number(x)
+         amin = (x*(aCH_max**(zeta+4.) - aCH_min**(zeta+4.)) + aCH_min**(zeta+4.))**(1./(zeta+4.))   ! size of the rigid monomer
+         swrm(i)%rigid_mass = (4.*third*pi*ridens)*amin**3.                                          ! mass of the rigid monomer
 
-         call random_number(x)
-         swrm(i)%rdis =  minrad0 + (maxrad0 - minrad0)*x
-         call random_number(x)
-         amin = (x*(aCH_max**(zeta+4.) - aCH_min**(zeta+4.)) + aCH_min**(zeta+4.))**(1./(zeta+4.))
-         swrm(i)%rigid_mass = (4.*third*pi*ridens)*amin**3.
-         
+         ! set if static properties are 0 or 1
          call random_number(x)
          if (x<(prop_CH)) then ! rigid
             swrm(i)%rigid = 1
@@ -91,7 +90,7 @@ module initproblem
 
          swrm(i)%npar = mswarm / swrm(i)%mass
          Hg = cs(swrm(i)%rdis, swrm(i)%tfor) / omegaK(swrm(i)%rdis, swrm(i)%tfor)
-         Hd = Hg*sqrt(alphat/(alphat + swrm(i)%stnr))
+         Hd = Hg*sqrt(alphat/(alphat + swrm(i)%stnr))            ! dust vertical scale height
          call random_number(rand)
          swrm(i)%zdis = 0.0005*AU * sqrt(-2.*log(rand(1))) * cos(2.*pi*rand(2))
          swrm(i)%stnr = stokesnr(swrm(i),swrm(i)%tfor) ! recalculate to estimate spreed
@@ -128,14 +127,11 @@ module initproblem
       ! mass of one swarm
       mswarm = mdust/ real(Ntot)
 
-      write(*,*) "total solid mass is ", mdust, "and mswarm is ", mswarm
       ! monomer mass
       m0 = 4. * third * pi * r0**3 * matdens
 
-      ! refractory mass minimum
+      ! refractory mass minimum and maximum
       mCH_min = 4. * third * pi * aCH_min**3 * ridens
-      write(*,*) 'mch min is ', mCH_min
-
       mCH_max = 4. * third * pi * aCH_max**3 * ridens
 
       if (.not.allocated(swrm)) allocate(swrm(Ntot))
@@ -146,24 +142,26 @@ module initproblem
     
       ! initializing the particles
       do i = 1, Ntot
-         swrm(i)%idnr = i
-         swrm(i)%plt = 0
-         swrm(i)%tfor = time
-         swrm(i)%rdis = rfor_arr(i)
+         swrm(i)%idnr = i             ! index
+         swrm(i)%plt = 0              ! particle is not a planetesimal
+         swrm(i)%tfor = time          ! formation time
+         swrm(i)%rdis = rfor_arr(i)   ! initial position
 
          call St_limited(swrm(i)%rdis, swrm(i)%tfor, Stlim, power)
-         swrm(i)%stnr = Stlim
+         swrm(i)%stnr = Stlim         ! set initial stokes number. This will be corrected at the end
 
          ! max size value for rigid size distribution
          ari_max = min(aCH_max, as_limited(swrm(i)%rdis, swrm(i)%tfor, ridens, swrm(i)%stnr))
+         ! probability for initiating a rigid particle
          pri = (ari_max**(zeta+4.)-aCH_min**(zeta+4.))/(aCH_max**(zeta+4.) - aCH_min**(zeta+4.))
-         swrm(i)%f_CH = prop_CH*pri
+         swrm(i)%f_CH = prop_CH*pri               ! update probability. Lower in the outer regions
          swrm(i)%f_matrix = 1.- swrm(i)%f_CH         
 
          swrm(i)%dens = 1./(swrm(i)%f_CH/ridens + swrm(i)%f_matrix/matdens)        ! internal density
 
          amin = as_limited(swrm(i)%rdis, swrm(i)%tfor, swrm(i)%dens, swrm(i)%stnr) ! we assume Epstein regime
 
+         ! calculate rigid mass of the monomer from size distribution
          call random_number(x)
          ari_static = (x*(ari_max**(zeta+4.) - aCH_min**(zeta+4.)) + aCH_min**(zeta+4.))**(1./(zeta+4.))
          swrm(i)%rigid_mass = (4.*third*pi*ridens)*ari_static**3.
@@ -179,8 +177,8 @@ module initproblem
             swrm(i)%f_CH = 0.
             swrm(i)%f_matrix = 1.
             call random_number(x)
-            amin = (x*(amin**power- r0**power) + r0**power)**(1./power) ! we take distribution assuming frag. limited
-            swrm(i)%mass = 4. * third * pi * swrm(i)%dens* amin**3
+            amin = (x*(amin**power- r0**power) + r0**power)**(1./power) ! assume size distribution from frag or drift limited
+            swrm(i)%mass = 4. * third * pi * swrm(i)%dens* amin**3      ! total mass of aggregate
          else ! rigid can in principle exist
 
             ! choose particle nature (rigid or fragile)
@@ -200,7 +198,7 @@ module initproblem
                   swrm(i)%mass = swrm(i)%rigid_mass
                else
                   ! particle is a chondritic aggregate
-                  swrm(i)%mass = 4. * third * pi * swrm(i)%dens* amin**3
+                  swrm(i)%mass = 4. * third * pi * swrm(i)%dens* amin**3 ! total mass of aggregate
                endif
 
             else ! fragile nature
@@ -226,14 +224,14 @@ module initproblem
          endif
 
          swrm(i)%zdis = 0.0 ! only to compute Hd. Then it will be changed
-         swrm(i)%stnr = stokesnr(swrm(i),swrm(i)%tfor)
+         swrm(i)%stnr = stokesnr(swrm(i),swrm(i)%tfor)   
 
          swrm(i)%npar = mswarm / swrm(i)%mass
          Hg = cs(swrm(i)%rdis, swrm(i)%tfor) / omegaK(swrm(i)%rdis, swrm(i)%tfor)
          Hd = Hg*sqrt(alphat/(alphat + swrm(i)%stnr))
          call random_number(rand)
          swrm(i)%zdis = Hd * sqrt(-2.*log(rand(1))) * cos(2.*pi*rand(2))
-         swrm(i)%stnr = stokesnr(swrm(i),swrm(i)%tfor) ! recalculate to estimate spreed
+         swrm(i)%stnr = stokesnr(swrm(i),swrm(i)%tfor) ! update final stokes number
          swrm(i)%velr = 1.e-20
          swrm(i)%velz = 1.e-20
          swrm(i)%coll_f = 0
