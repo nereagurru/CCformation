@@ -7,19 +7,19 @@ module types
       integer        :: idnr     ! id of the swarm
       real           :: npar     ! number of bodies
       real           :: mass     ! mass of one body
-      real           :: dens     ! density of material; ! this maybe relevant only when one mat
+      real           :: dens     ! density of material
       real           :: rdis     ! cylindrical radius
       real           :: tfor     ! formation time
       real           :: zdis     ! distance from the midplane
-      real           :: velr     ! radial velocity (advection)
-      real           :: velz     ! vertical velocity (advection)
+      real           :: velr     ! radial velocity (advection + radial drift)
+      real           :: velz     ! vertical velocity (settling)
       real           :: stnr     ! Stokes number of the particle
       integer        :: coll_f   ! flag to bookmark collision event (1 if event happens, else 0)
-      real           :: f_CH     ! fraction of CH  (unity or less)
-      real           :: f_matrix ! fraction of matrix
-      integer        :: rigid    ! boolean. Nature of particle. False if matrix; True if rigid
-      real           :: rigid_mass    ! if rigid True, mass of rigid we track. Otherwise 0.
-      integer        :: plt ! 1 if converts into planetesimal, 0 otherwise
+      real           :: f_CH     ! fraction of rigid  (between 0 and 1)
+      real           :: f_matrix ! fraction of matrix (1-f_CH)
+      integer        :: rigid    ! Nature of particle. 0 if matrix; 1 if rigid
+      real           :: rigid_mass    ! if rigid True, mass of rigid we track. Otherwise virtual value (updated when similar particles collide).
+      integer        :: plt       ! 1 if converts into planetesimal, 0 otherwise
    end type swarm
 
    type :: list_of_swarms
