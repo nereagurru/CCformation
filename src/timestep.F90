@@ -1,6 +1,4 @@
 ! this module estimates maximum time step of the code taking into account Courant-like condition for advection
-! if you implement other processes requiring time step limitation, put corresponding subroutine here
-! and take the result into account in the time_step routine
 module timestep
 
    use grid,       only: g
@@ -11,7 +9,6 @@ module timestep
 
    contains
 
-
    ! gives back timestep as minimal timestep of all processes
    subroutine time_step(bin, ncolls, dtout, final_dtime)
       implicit none
@@ -20,16 +17,11 @@ module timestep
       real, intent(in)                               :: dtout
       real, intent(inout)                            :: final_dtime   ! final timestep
       real                                           :: old_dt
-      integer                                        :: i, j, c2=1 !c1,c2 - timestep enlargement factors
-#ifdef ZERO_D
-      integer :: c1 = 1
-#else
-      integer :: c1 = 10 ! 10
-#endif
+      integer                                        :: i, j, c2=1, c1=10 !c1,c2 - timestep enlargement factors
       real:: eps_time = 1. !in secs
 
       old_dt = final_dtime
-      if (dtout>eps_time) final_dtime = dtout ! if dtout == 0 then the timestep drops to 0 and code breaks
+      if (dtout>eps_time) final_dtime = dtout ! avoid dtout == 0 as the timestep drops to 0
       
       do i = 1, size(ncolls(:,:),dim=1)
          do j = 1, size(ncolls(:,:),dim=2)
