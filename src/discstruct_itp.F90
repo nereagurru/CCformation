@@ -1,5 +1,9 @@
 ! put your gas disk model here
 ! x is distance from the star (in cm)
+! time is in s
+! disk structure has been caluclated using Diskevol (Drążkowska & Dullemond (2018) A&A 614, A62) with including a gap and photoevaporation
+! data is interpolated
+
 module discstruct
    use constants, only: AU, kB, mH2, pi, third
    use parameters,only: alphat, maxrad0, vfrag, dtg, disk_path
@@ -8,19 +12,21 @@ module discstruct
    implicit none
 
    private
-   public   :: init_struct, end_struct, alpha, cs, omegaK, sigmag, densg, Pg, vgas
-   public   :: ddensgdz, ddensgdr, gasmass, dlogPg, diffcoefgas, deltav, Temp
+   public   :: init_struct, end_struct, cs, omegaK, sigmag, densg, Pg, vgas
+   public   :: ddensgdz, ddensgdr, gasmass, dlogPg, deltav, Temp
    public   :: Msolid_PB, particle_formation_PB
    public   :: stokes_frag, stokes_drift, St_limited
 
    integer                             :: nr, nt
-   real, allocatable, dimension(:, :)  :: sigma_itp, Te_itp, vel_itp, alpha_itp
+   real, allocatable, dimension(:, :)  :: sigma_itp, Te_itp, vel_itp
    real, allocatable, dimension(:, :)  :: dsigmadr_itp, dTdr_itp
    real, allocatable, dimension(:)     :: r_itp, t_itp, Mstar_itp
    logical                             :: bounds_error=.False.
 
    contains
 
+   ! read grids of time, position, gas surface density, temperature, gas radial velocity, stellar mass
+   ! radial derivative of gas surface density, radial derivative of temperature
    subroutine init_struct()
 
       integer                    :: i, j
@@ -50,7 +56,7 @@ module discstruct
       do j=1, nr
          read(22, *) r_itp(j)
       end do
-      allocate(sigma_itp(nr, nt), Te_itp(nr, nt), vel_itp(nr, nt), Mstar_itp(nt), alpha_itp(nr, nt))
+      allocate(sigma_itp(nr, nt), Te_itp(nr, nt), vel_itp(nr, nt), Mstar_itp(nt))
       filename = "sigma.dat"
       filepath =  trim(disk_path)//trim(filename)
       open(unit=23, action="read", file=filepath, status="old")
@@ -131,14 +137,6 @@ module discstruct
       close(unit=33)
       
    end subroutine init_struct
-
-   ! Shakura-Sunyaev's turbulence parameter
-   real function alpha(x, time)
-      implicit none
-      real, intent(in)  :: x, time
-      alpha = interp2d(r_itp, t_itp, alpha_itp, x, time, bounds_error, 0.0)
-      return
-   end function
 
    ! speed of the sound in gas
    real function cs(x, time)
@@ -282,13 +280,6 @@ module discstruct
       return
    end function
 
-   ! turbulent diffusion coefficient
-   real function diffcoefgas(x, time)
-      implicit none
-      real, intent(in)  :: x, time
-      diffcoefgas = alpha(x, time) * cs(x, time)**2 / omegaK(x, time)
-      return
-   end function
    
    ! partial derivative of gas density with respect to vertical height
    real function ddensgdz(x,z, time)
@@ -458,7 +449,7 @@ module discstruct
 
    ! for deallocating
    subroutine end_struct()
-      deallocate(sigma_itp, Te_itp, vel_itp, alpha_itp, r_itp, t_itp, &
+      deallocate(sigma_itp, Te_itp, vel_itp, r_itp, t_itp, &
                 & Mstar_itp, dsigmadr_itp, dTdr_itp)
    end subroutine end_struct
 
