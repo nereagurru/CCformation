@@ -1,6 +1,6 @@
-! this module performes collisions between representative bodies
+! this module performs collisions between representative bodies
 ! in this module all the quantities should be computed at the center of current cell
-! in the matrices: first index -> representative particle, 2nd -> physical
+! in the arrays: first index -> representative particle, 2nd -> physical
 
 
 module collisions
@@ -23,7 +23,7 @@ module collisions
    contains
 
    ! the routine performes collisional evolution on swarms located in the cell nr,ni with the aid of the MC algorithm
-   subroutine mc_collisions(nr, ni, bin, swrm, dtime, realtime, kk, Nplt)
+   subroutine mc_collisions(nr, ni, bin, swrm, dtime, realtime, kk, index_init)
       implicit none
       type(swarm), dimension(:), allocatable, target            :: swrm
       type(list_of_swarms), dimension(:,:), allocatable, target :: bin
@@ -31,7 +31,7 @@ module collisions
       integer, intent(in)                             :: nr, ni      ! indices of the cell
       real, intent(in)                                :: dtime       ! time step
       real, intent(in)                                :: realtime    ! physical time
-      integer, intent(in)                             :: Nplt
+      integer, intent(in)                             :: index_init  ! first index of particles in swrm array
       integer                                         :: nsws        ! number of representative particles in given cell
       integer                                         :: nri, nrk    ! indices of physical and representative particles choosen to the next collision
       real, dimension(:,:), allocatable               :: colrates    ! collision rates matrix
@@ -47,11 +47,10 @@ module collisions
       real                                            :: vn          ! maximum radial velocity from the pressure gradient
       real                                            :: Reynolds, v0, Vg2, veta, tL, teta ! relative velocities stuff
       real                                            :: lmfp, gasdens ! mean free path, gas density
-      integer                                         :: i, k, l
+      integer                                         :: i, k, l     ! counters
       integer, intent(out)                            :: kk ! collisions counter
-      real                                            :: dustdens
-      real                                            :: Kepler_freq, cs_speed
-      real                                            :: deltar, deltaz
+      real                                            :: Kepler_freq, cs_speed ! Keplerian frequency and sound speed
+      real                                            :: deltar, deltaz ! size of radial and vertical grid; for adaptative dmmax
       
       
       deltar = g%rup(nr) - g%rlo(nr)
@@ -77,10 +76,7 @@ module collisions
       swarms(:)%coll_f = 0         ! setting collision flag to zero, will be updated to 1 if collisions happen
       nsws = size(swarms)          ! number of swarms in the current cell
 
-      dustdens =  real(nsws) * mswarm / g%vol(nr,ni)
-
       allocate (colrates(nsws,nsws), accelncol(nsws,nsws), relvels(nsws,nsws), stokesnr(nsws), vs(nsws), vr(nsws), colri(nsws))
-
 
       ! calculates initial Stokes number for particles and their settling and radial drift velocities
       do i = 1, nsws
@@ -139,7 +135,7 @@ module collisions
       do k = 1, nsws
          if(swarms(k)%coll_f /= 0) then
 
-            l = Nplt
+            l = index_init
 
             do while (swrm(l)%idnr /= swarms(k)%idnr)
                l = l + 1
@@ -310,6 +306,7 @@ module collisions
       colrates(:,nl) = swarms(nl)%npar * relvels(nl,:) * pi**third * (0.75)**(2. * third) * &
                        ((swarms(nl)%mass/swarms(nl)%dens)**third + (swarms(:)%mass/swarms(:)%dens)**third)**2./vol
 
+      ! adaptive dmmax for grouping collisions
       where(swarms(nl)%mass/swarms(:)%mass < dmmax)
          accelncol(:,nl) = max(colrates(:,nl) * min(deltar/abs(swarms(:)%velr),deltaz/abs(swarms(:)%velz)), 1.)
          accelncol(:,nl) = min(accelncol(:,nl), swarms(:)%mass * dmmax / swarms(nl)%mass)
@@ -406,7 +403,6 @@ module collisions
 
       totmass = swarms(nri)%mass + accelncol(nri, nrk) * swarms(nrk)%mass
 
-
       ! if similar particles (90% of similarity) update rigid mass of fragile. To keep the simmetry of fragmenting population
       if ((swarms(nri)%rigid .eq. 0) .and. (swarms(nrk)%rigid .eq. 1)) then
          if ((1.1*swarms(nri)%mass>swarms(nrk)%mass) .and. (0.9*swarms(nri)%mass<swarms(nrk)%mass)) then ! similar in mass
@@ -421,14 +417,15 @@ module collisions
       if (swarms(nri)%f_matrix < 0.) swarms(nri)%f_matrix = 0. ! to avoid numerical problems
       if (swarms(nri)%f_matrix > 1.) swarms(nri)%f_matrix = 1. ! to avoid numerical problems
 
+      ! internal density
       swarms(nri)%dens = 1./(swarms(nri)%f_CH/ridens + swarms(nri)%f_matrix/matdens)
-
 
       swarms(nri)%mass = totmass
 
       return
    end subroutine hit_and_stick
 
+   ! function to calculate the mass of the fragment
    real function f_mf(mmin, mmax, exp)
       implicit none
       real, intent(in) :: mmin, mmax, exp
@@ -448,8 +445,8 @@ module collisions
       type(swarm), dimension(:), pointer              :: swarms
       real, parameter                                 :: kappa = 1./6.  ! n(m) ~ m^(kappa - 2)
 
+      ! calculate mass of fragment
       mf = f_mf(m0, swarms(nri)%mass, kappa)
-
 
       if ((swarms(nri)%f_CH>eps_fri)) then ! if False is pure matrix 
 
@@ -470,12 +467,12 @@ module collisions
       endif
 
       swarms(nri)%mass = mf
-      swarms(nri)%mass = max(swarms(nri)%mass, m0)
+      swarms(nri)%mass = max(swarms(nri)%mass, m0) ! to avoid numerical problems
       
       return
    end subroutine fragmentation
 
-   ! vertical settling velocity
+   ! vertical settling velocity at the centre of grid
    subroutine vel_vs_centr(nr, ni, i, stokesnr, Kepler_freq, vs)
       implicit none
       integer, intent(in)                             :: nr, ni
@@ -488,7 +485,7 @@ module collisions
       return
    end subroutine vel_vs_centr
 
-   ! velocity of radial drift
+   ! velocity of radial drift at the centre of grid
    subroutine vel_rd_centr(nr, i, stokesnr, vr, vn, realtime)
       implicit none
       integer, intent(in)                             :: nr
