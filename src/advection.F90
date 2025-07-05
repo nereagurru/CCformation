@@ -47,16 +47,20 @@ module advection
 
          particle%stnr = stokesnr(particle,realtime)
 
-         call vel_vn(particle, vn, realtime)
-
+         ! vertical transport
          call vel_vs(particle, vs, realtime)
          call vel_ver(particle, vs, velv, dtime, realtime)
 
+         ! radial transport
+         call vel_vn(particle, vn, realtime)
          call vel_rd(particle, vr, vn, realtime)
          call vel_rad(particle, velr, vr, dtime, realtime)
+         ! transport particle radially
          particle%rdis = particle%rdis + vr * dtime 
 
+         ! is it still outside evaporation radius?
          if (particle%rdis > smallr) then
+            ! transport particle radially
             particle%zdis = particle%zdis + velv * dtime
             particle%stnr = stokesnr(particle,realtime)
          else
@@ -65,7 +69,7 @@ module advection
             Nflux = Nflux + 1
             !$OMP end critical
             
-            ! when did particle cross photoevaporation line?
+            ! when did particle cross 6.5AU?
             particle%tfor = realtime + dtime + (smallr-particle%rdis)/vr
             ! z and St of particle when crossing smallr?
             particle%zdis = particle%zdis + velv * (dtime + (smallr-particle%rdis)/vr)
@@ -84,6 +88,7 @@ module advection
    end subroutine mc_advection
 
 
+   ! this function is employed when adding particles in the local simulation
    subroutine mc_advection_element(particle, dtime, realtime)
       implicit none
       type(swarm), target                            :: particle
@@ -95,7 +100,6 @@ module advection
          
          call vel_vn(particle, vn, realtime)
          particle%stnr = stokesnr(particle,realtime)
-
 
          call vel_vs(particle, vs, realtime)
          call vel_ver(particle, vs, velv, dtime, realtime)
@@ -117,13 +121,12 @@ module advection
       return
    end subroutine mc_advection_element
 
-   ! the maximum radial drift speed due to the gas pressure gradient
+   ! Keplerian velocity reduction of gas
    subroutine vel_vn(particle, vn, realtime)
       implicit none
       type(swarm)                                    :: particle
       real, intent(in)                               :: realtime
       real                                           :: vn
-      
       vn = 0.5*dlogPg(particle%rdis, particle%zdis, realtime)*Pg(particle%rdis, particle%zdis, realtime)/particle%rdis/ &
            densg(particle%rdis, particle%zdis, realtime)/omegaK(particle%rdis, realtime)
       return
@@ -181,7 +184,7 @@ module advection
    end subroutine vel_rad
 
 
-   ! calculates the Stokes numbers of particles locally
+   ! calculates the Stokes numbers of one particle locally
    real function stokesnr(particle, realtime)
       implicit none
       type(swarm)                                     :: particle
@@ -197,9 +200,8 @@ module advection
       rad = (0.75 / pi / particle%dens)**third * particle%mass**third
       
       if (rad > 2.25 * lmfp) then ! Stokes regime
-         write(*,*) 'Stokes' , particle%dens, particle%mass
          stokesnr = sqrt(2.*pi) * rad**2. *  particle%dens * omegaK(particle%rdis, realtime) * AH2 / (9. * css * mH2)
-      else                 ! Epstein regime
+      else                       ! Epstein regime
          stokesnr = rad *  particle%dens / (sqrt(8./pi) * css * gasdens) * omegaK(particle%rdis, realtime)
       endif
 
@@ -216,7 +218,7 @@ module advection
       return
    end subroutine vel_vs
 
-   ! velocity of the radial drift
+   ! velocity due to radial drift and advection
    subroutine vel_rd(particle, vr, vn, realtime)
       implicit none
       type(swarm)                                     :: particle
@@ -228,6 +230,7 @@ module advection
    end subroutine vel_rd
 
 
+   ! update the stokes number of particles
    subroutine update_St(swrm, realtime)
       implicit none
       type(swarm), dimension(:), allocatable, target :: swrm
