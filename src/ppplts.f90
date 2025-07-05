@@ -1,3 +1,6 @@
+! this module converts pebbles into planetesimals by setting plt=1 and frezing them
+! by changing their radial distance inside the evaporation radius. 
+
 module ppplts
    use constants
    use discstruct
@@ -53,6 +56,7 @@ module ppplts
 
       write(*,*) "We remove ", nremv, " particles"
 
+      ! remove pebbles
       call form_planetesimals(swrm, rbin, nr, nparts, nparts_tot, nremv)
    
       return
@@ -74,13 +78,13 @@ module ppplts
       
       ! collect particles for 1 clump
       do while (nremv > 0)
-         ! choose largest particle
          i = 1
          j = 1
          call random_number(rand)
          remove = floor(rand*nparts) + 1
          do while (j .ne. remove)
             i = i + 1
+            ! pebbles that can undergo SI have their St between stmin and 100*stmin
             if ((rbin(nr)%p(i)%stnr > stmin) .and. (rbin(nr)%p(i)%stnr < 100.*stmin)) j = j + 1 
          enddo
          mclump = mclump + mswarm
