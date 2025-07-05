@@ -1,4 +1,5 @@
 ! this module should contain all the initial conditions for dust
+! different funcitons for 0D (init_swarms_OD) and for 2D simulations (init_swarms_PB2)
 module initproblem
 
    use constants,  only: pi, third, AU, year
@@ -140,7 +141,7 @@ module initproblem
       if (.not.allocated(swrm)) allocate(swrm(Ntot))
       allocate(rfor_arr(Ntot))
 
-
+      ! calculate positions to initialize particles
       call particle_formation_PB(1, Ntot, mswarm, time, minrad0, rfor_arr, 1.)
     
       ! initializing the particles
@@ -153,12 +154,13 @@ module initproblem
          call St_limited(swrm(i)%rdis, swrm(i)%tfor, Stlim, power)
          swrm(i)%stnr = Stlim
 
+         ! max size value for rigid size distribution
          ari_max = min(aCH_max, as_limited(swrm(i)%rdis, swrm(i)%tfor, ridens, swrm(i)%stnr))
          pri = (ari_max**(zeta+4.)-aCH_min**(zeta+4.))/(aCH_max**(zeta+4.) - aCH_min**(zeta+4.))
          swrm(i)%f_CH = prop_CH*pri
          swrm(i)%f_matrix = 1.- swrm(i)%f_CH         
 
-         swrm(i)%dens = 1./(swrm(i)%f_CH/ridens + swrm(i)%f_matrix/matdens)
+         swrm(i)%dens = 1./(swrm(i)%f_CH/ridens + swrm(i)%f_matrix/matdens)        ! internal density
 
          amin = as_limited(swrm(i)%rdis, swrm(i)%tfor, swrm(i)%dens, swrm(i)%stnr) ! we assume Epstein regime
 
@@ -169,7 +171,7 @@ module initproblem
 
          ! can rigid exist?
 
-         if (St_eps(swrm(i)%rdis, swrm(i)%tfor, ridens, ari_static) .gt. swrm(i)%stnr) then ! if Stlim < St(ri_min), pure matrix
+         if (St_eps(swrm(i)%rdis, swrm(i)%tfor, ridens, ari_static) .gt. swrm(i)%stnr) then
             ! particle needs to be fragile due to growth barriers
             swrm(i)%rigid = 0
             !swrm(i)%rigid_mass = 0.
