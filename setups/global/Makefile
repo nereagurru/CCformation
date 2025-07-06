@@ -1,6 +1,5 @@
 F90=gfortran
 H5F=h5fc
-FFLAGSCOV=-O2 -fdefault-real-8 -ffree-form -fopenmp -pg --coverage
 FFLAGS=-O2 -fdefault-real-8 -ffree-form -fopenmp
 #add preprocessors:
 CFLAGS=
