@@ -1,0 +1,6 @@
+# FLAGS for execution; add # at the beginning of line to deactivate FLAG
+
+# local simulation; include flux at the outer edge
+CFLAGS+=-D LOCAL_SIM
+
+
