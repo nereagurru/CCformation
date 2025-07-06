@@ -23,7 +23,8 @@ Main files:
 - disk: data from diskevol (download data inside disk file to run this code)
 - setup: compilation and parameter information
 - outputs: for data storaged
-- scripts: generate all figures from the manuscript
+- scripts: generate all figures from the main manuscript
+- obj: storage of temporary ".mod" and ".o" files
 
 # ## Prerequisites
 
