@@ -1,3 +1,6 @@
+# to reproduce figure 2
+# before running the script, copy "disk_data/*.dat" and "disk_data/*.info" files to ../disk/.
+
 import matplotlib.pyplot as plt
 import numpy as np
 from Plotting import init_plot
