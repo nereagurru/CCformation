@@ -20,7 +20,7 @@ all_files = sorted(glob.glob(os.path.join(output_dir, "*.h5")))
 # read planetesimals
 with h5py.File(all_files[0], 'r') as f:
 
-    tfor = f['tfor'][...]
+    tfor = f['tfor'][...] # formation of planetesimals
     rigid_plt = f['rigid_plt'][...]
 
 Stmin, Stmax = 0.01, 1
@@ -61,7 +61,7 @@ for it in range(len(t_arr)):
     if len(values)>100: # to avoid data points with little statistical 
                         # significance (setting it to 0 won't change overall plot)
 
-        ax.scatter(1-np.mean(values), t_arr[it]/10**6-t_CAI,
+        ax.scatter(1-np.mean(values), 0.5*(t_arr[it]+t_arr[it-1])/10**6-t_CAI,  # plt formed betweem  t_arr[i-1] and t_arr[I], we take the mean value as the formation time
                    c='#7B5EA4', s=100,
                    alpha=1, zorder=0)
 
