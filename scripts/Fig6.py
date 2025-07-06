@@ -51,7 +51,6 @@ for i in range(len(t_eval)):
 
     # what file is the nearest to the time we want to evaluate?
     file_id = np.argmin(np.absolute(t_arr-t_eval[i]*10**6))
-    print(file_id)
     with h5py.File(all_files[1:][file_id], 'r') as f:
 
         # Read compound dataset from swarms/swarmsout
