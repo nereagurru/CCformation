@@ -1,6 +1,6 @@
 This readme file was generated on 2025-07-06 by Nerea Gurrutxaga
 
-# GENERAL INFORMATION
+## GENERAL INFORMATION
 
 Title of code: mcdust for CC formation
 Description: this code calculates the dust evolution of particles 
@@ -12,11 +12,11 @@ Institution: Max Planck Institute for Solar System Research
 Email: gurrutxaga@mps.mpg.de
 
 
-# SHARING/ACCESS Code
+## SHARING/ACCESS Code
 
 The code will be made public ones the paper is public
 
-# FILE OVERVIEW
+## FILE OVERVIEW
 
 Main files:
 - src: all .F90 programs
