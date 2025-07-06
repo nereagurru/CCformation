@@ -187,7 +187,7 @@ class Disk:
         return (self.f_vg(t, r) - 2*self.delta_v(t, r)*St)/(1+St**2)
 
 
-disk = Disk('../disk/PE/disk_midalpha/gap/shallow/')
+disk = Disk('../disk/')
 #%% make plot
 
 
