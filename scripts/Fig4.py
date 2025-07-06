@@ -33,7 +33,7 @@ t_eval += t_CAI
 
 nrl = 16
 rl = np.linspace(5.725, 6.5, nrl)
-from_AU_to_cm = (1*u.AU).to(u.cm)
+from_AU_to_cm = (1*u.AU).to(u.cm).value
 
 sigmadl = np.empty((rl.shape[0]-1, t_eval.shape[0]))
 sigmadl_fri = np.empty((rl.shape[0]-1, t_eval.shape[0]))
