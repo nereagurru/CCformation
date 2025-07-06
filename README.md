@@ -56,11 +56,11 @@ To clear the run
 
 in the /setups/global/ file: `make clean`
 
-Once the global output is generated, run local simulation:
+The global run generates data in the outputs/global/feeding_data that is necessary to run a local simulation:
 
 in the /setups/local/ file: `make`
 in the /setups/local/ file: `./global setup.par`
 in the /setups/local/ file: `make clean`
 
-
+Alternatively, feeding_data/*.h5 files can be manually copied from provided data.
 
