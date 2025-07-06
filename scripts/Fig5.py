@@ -1,3 +1,5 @@
+# reproduce figure 5
+
 import h5py
 import os
 import glob
@@ -6,9 +8,8 @@ from astropy import units as u
 from Plotting import init_plot
 import matplotlib.pyplot as plt
 
-# reproduce figure 5
 
-#%% read data
+# read data
 
 output_dir = "../outputs/local_data_reduced"
 
@@ -41,11 +42,7 @@ for i, file_path in enumerate(all_files[1:]):
         pebbles_fri[i] = np.mean(rigid[(bool_r)&(bool_St)])
         
 
-#%% make plot
-
-
-
-
+# make plot
 
 
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 12), sharey=True)
