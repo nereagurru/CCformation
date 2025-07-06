@@ -4,7 +4,6 @@ import h5py
 import os
 import glob
 import numpy as np
-from astropy import units as u
 from Plotting import init_plot
 import matplotlib.pyplot as plt
 
@@ -89,14 +88,14 @@ tacc = np.array([[3.5, 4.], [2.2, 2.6], [2.3, 3.1],
 fri = np.array([[0.88, 0.98], [0.68, 0.92], [0.62, 0.77],
                 [0.48, 0.7], [0.15, 0.6], [0., 0.]]).T
 
-ax.errorbar(1-fri.mean(axis=0), tacc.mean(axis=0)*u.yr.to(u.Myr),
+ax.errorbar(1-fri.mean(axis=0), tacc.mean(axis=0),
                xerr=fri[1,:]-fri.mean(axis=0), 
-               yerr=(tacc[1,:]-tacc.mean(axis=0))*u.yr.to(u.Myr), 
+               yerr=(tacc[1,:]-tacc.mean(axis=0)), 
                ecolor='k', c='k', elinewidth=3,fmt='s')
 
 for i, label in enumerate(CC_label):
     if i ==1 or i ==2 or i ==3 or i==4 or i==5 or i==0:
-        ax.text(y=(tacc[:, i].mean())*u.yr.to(u.Myr) + 0.05,
+        ax.text(y=(tacc[:, i].mean()) + 0.05,
                 x=(1-fri[:, i].mean(axis=0) + 0.01), s=label)
 
 
