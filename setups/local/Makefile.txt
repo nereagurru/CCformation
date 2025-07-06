@@ -1,6 +1,5 @@
 F90=gfortran
 H5F=h5fc
-FFLAGSTEST=-ffpe-trap=zero,overflow,invalid -Wall -W -ffree-form -g -fbounds-check -fbacktrace -fdefault-real-8 -fopenmp -fcheck=all -O0
 FFLAGS=-O2 -fdefault-real-8 -ffree-form -fopenmp
 #add preprocessors:
 CFLAGS=
@@ -8,7 +7,7 @@ OPT_FILE ?= ifdef.opt
 -include $(OPT_FILE)
 
 SRC_DIR=../../src
-OBJ_DIR=../../obj/local_f50
+OBJ_DIR=../../obj/local
 
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.F90 | $(OBJ_DIR)
@@ -35,9 +34,9 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 
 clean:
-	rm -rf $(OBJ_DIR)/ local_f50 *.out *.err *.o *.mod
+	rm -rf $(OBJ_DIR)/ local *.out *.err *.o *.mod
 cleancov:
-	rm -rf *.gcno *.gcda *.gcov *.o *.mod *.dat *.out *.err local_f50
+	rm -rf *.gcno *.gcda *.gcov *.o *.mod *.dat *.out *.err local
 
 
 
