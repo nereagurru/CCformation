@@ -1,5 +1,5 @@
 # reproduce figure 5
-
+# before running the script, copy "local_data_reduced/" directory to ../outputs/.
 import h5py
 import os
 import glob
