@@ -1,10 +1,9 @@
 This readme file was generated on 2025-07-06 by Nerea Gurrutxaga
 
-
 # GENERAL INFORMATION
 
-Title of Dataset: Gas disk evolution with planetary gap and photoevaporation
-Description: this dataset is generated using the code Diskevol (github.com/astrojoanna/DD-diskevol/tree/main), but modified by including a planetary gap and photoevaporation.
+Title of code: mcdust for CC formation
+Description: this code calculates the dust evolution of particles 
 
 Author Information
 Name: Nerea Gurrutxaga
@@ -12,30 +11,55 @@ ORCID: 0009-0008-3256-9564
 Institution: Max Planck Institute for Solar System Research
 Email: gurrutxaga@mps.mpg.de
 
-Date of data collection: 2025-01-19
 
-Geographic location of data collection: Göttingen, Lower Saxony, Germany
+# SHARING/ACCESS Code
+
+The code will be made public ones the paper is public
+
+# FILE OVERVIEW
+
+Main files:
+- src: all .F90 programs
+- disk: data from diskevol (download data inside disk file to run this code)
+- setup: compilation and parameter information
+- outputs: for data storaged
+- scripts: generate all figures from the manuscript
+
+# ## Prerequisites
+
+`gfortran` `hdf5-serial` `python`
+
+To install the required software in Ubuntu (this requires root permissions):
+`sudo apt-get install gfortran`
+`sudo apt-get install libhdf5-serial-dev`
+
+Python is not required to run the code. But if you want to use the routines to read/write data from the simulation you will need a python installation.
+
+## To compile the code: 
+
+in the /setups/global/ file: `make`
+
+This uses the setup files from the default run in `/setups/global/` 
+ An executable in the name of the setup file will be created in the root directory which is `global` in this case.
+
+parameter file: setups/global/setup.par
 
 
-# SHARING/ACCESS Data
+## To run the code: 
 
-Licenses/restrictions placed on the data: CC BY 4.0
+in the /setups/global/ file: `export OMP_NUM_THREADS=number_of_CPUs`
 
-Data was generated with a modified version of the code: github.com/astrojoanna/DD-diskevol/tree/main
+in the /setups/global/ file: `./global setup.par`
 
-# DATA & FILE OVERVIEW
+To clear the run
 
-File List: All outputs are in CGS units. One file includes data corresponding to one variable:
+in the /setups/global/ file: `make clean`
 
-time.info number of outputs produced,
-grid.info radial distance to the central star,
-sigma.dat gas surface density,
-dsigmadr.dat radial derivative of gas surface density,
-velo.dat radial velocity of gas,
-temperature.dat midplane temperature,
-dTdr.dat radial derivative of midplane temperature,
-alpha.dat gas turbulence strength parameter,
-mstar.dat mass of the central star,
-time.dat output time.
-For time dependent variables, the files are appended each time the output is produced, the outputs are separated by blank line. One row corresponds to one radial cell.
+Once the global output is generated, run local simulation:
+
+in the /setups/local/ file: `make`
+in the /setups/local/ file: `./global setup.par`
+in the /setups/local/ file: `make clean`
+
+
 
