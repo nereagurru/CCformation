@@ -1,7 +1,5 @@
 F90=gfortran
 H5F=h5fc
-#FFLAGSTEST=-ffpe-trap=zero,overflow,invalid -Wall -W -ffree-form -std=gnu -fimplicit-none -g -fbounds-check -fbacktrace -fdefault-real-8 -O2 -fopenmp
-FFLAGSTEST=-ffpe-trap=zero,overflow,invalid -Wall -W -ffree-form -g -fbounds-check -fbacktrace -fdefault-real-8 -fopenmp -fcheck=all -O0
 FFLAGSCOV=-O2 -fdefault-real-8 -ffree-form -fopenmp -pg --coverage
 FFLAGS=-O2 -fdefault-real-8 -ffree-form -fopenmp
 #add preprocessors:
@@ -10,13 +8,13 @@ OPT_FILE ?= ifdef.opt
 -include $(OPT_FILE)
 
 SRC_DIR=../../src
-OBJ_DIR=../../obj/zerod_t0_f05
+OBJ_DIR=../../obj/zerod
 
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.F90 | $(OBJ_DIR)
 	$(H5F) $(FFLAGS) $(CFLAGS) -J$(OBJ_DIR) -c $< -o $@
 
-zerod_t0_f05: $(OBJ_DIR)/main_PB.o $(OBJ_DIR)/timestep.o $(OBJ_DIR)/hdf5output.o $(OBJ_DIR)/output.o $(OBJ_DIR)/collisions.o $(OBJ_DIR)/advection.o $(OBJ_DIR)/grid.o $(OBJ_DIR)/parallel_sort.o $(OBJ_DIR)/mrgrnk.o $(OBJ_DIR)/initproblem_itp.o $(OBJ_DIR)/discstruct_itp.o $(OBJ_DIR)/parameters.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/types.o $(OBJ_DIR)/constants.o $(OBJ_DIR)/ppplts.o
+zerod: $(OBJ_DIR)/main_PB.o $(OBJ_DIR)/timestep.o $(OBJ_DIR)/hdf5output.o $(OBJ_DIR)/output.o $(OBJ_DIR)/collisions.o $(OBJ_DIR)/advection.o $(OBJ_DIR)/grid.o $(OBJ_DIR)/parallel_sort.o $(OBJ_DIR)/mrgrnk.o $(OBJ_DIR)/initproblem_itp.o $(OBJ_DIR)/discstruct_itp.o $(OBJ_DIR)/parameters.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/types.o $(OBJ_DIR)/constants.o $(OBJ_DIR)/ppplts.o
 	$(H5F) $(FFLAGS) $(CFLAGS) $(LDFLAGS) $? -o $@
 
 $(OBJ_DIR)/constants.o: $(SRC_DIR)/constants.F90
@@ -40,7 +38,7 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 
 clean:
-	rm -rf $(OBJ_DIR)/ zerod_t0_f05 *.out *.err *.o *.mod
+	rm -rf $(OBJ_DIR)/ zerod *.out *.err *.o *.mod
 cleancov:
-	rm -rf *.gcno *.gcda *.gcov *.o *.mod *.dat *.out *.err zerod_t0_f05
+	rm -rf *.gcno *.gcda *.gcov *.o *.mod *.dat *.out *.err zerod
 
