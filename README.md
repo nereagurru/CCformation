@@ -37,5 +37,5 @@ dTdr.dat radial derivative of midplane temperature,
 alpha.dat gas turbulence strength parameter,
 mstar.dat mass of the central star,
 time.dat output time.
-For time dependent variables, the files are appended each time the output is produced, the outputs are separated by blank line. One row corresponds to one radial cell.<list all files (or folders, as appropriate for dataset organization) contained in the dataset, with a brief description>
+For time dependent variables, the files are appended each time the output is produced, the outputs are separated by blank line. One row corresponds to one radial cell.
 
