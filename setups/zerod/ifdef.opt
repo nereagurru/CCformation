@@ -1,33 +1,6 @@
 # FLAGS for execution; add # at the beginning of line to deactivate FLAG
 
-# vertical settling
-CFLAGS+=-D VERSETTLING
-
-# include radial drift
-CFLAGS+=-D RADRIFT
-
-#include two material; fragile and rigid
-CFLAGS+=-D MAT_TWO
-
-# include size distribution (MAT_TWO needs to be activated for this)
-CFLAGS+=-D SIZEDIST
-
-# include bouncing barrier
-#CFLAGS+=-D BOUNCE
-
-# include erosion
-#CFLAGS+=-D EROSION
-
-#print radial velocity across gap
-#CFLAGS+=-D PRINT_VEL
-
-# add extra inner and gap grid
-#CFLAGS+=-D GAP_grid
-
-# no frag. different
-#CFLAGS+=-D NO_FRAG
-
-# no SI
+# without planetesimal formation
 CFLAGS+=-D NO_SI
 
 # 0 D simulation
