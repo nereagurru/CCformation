@@ -26,7 +26,7 @@ Main files:
 - scripts: generate all figures from the main manuscript
 - obj: storage of temporary ".mod" and ".o" files
 
-# ## Prerequisites
+## Prerequisites
 
 `gfortran` `hdf5-serial` `python`
 
