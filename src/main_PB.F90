@@ -187,7 +187,7 @@ program main
       write(*,*) 'init time is ', time/year
 #ifdef LOCAL_SIM
       Ntot = Nmax
-
+#endif
 
 #ifdef ZERO_D
       call init_swarms_OD(Ntot, temp_swrm, time)
