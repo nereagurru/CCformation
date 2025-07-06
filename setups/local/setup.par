@@ -12,7 +12,7 @@ refractory_density_[g/cm3]                3.3
 dmmax                                     0.01
 evaporation_radius_[AU]                   5.725
 dust_to_gas_ratio                         5.e-5
-restart                                   .true.
+restart                                   .false.
 fragmentation_velocity_[cm/s]             200.
 alphat                                    1.e-4
 zeta                                      -3.9
@@ -20,11 +20,11 @@ CH_abundance                              0.50
 CH_size_min                               0.001
 CH_size_max                               0.1
 plt_eff                                   1.e-3
-disk_path                                 "../../disk/PE/disk_midalpha/gap/shallow/"
-init_path                                 "local_f50/"
-out_path                                  "local_f50/"
+disk_path                                 "../../disk/"
+init_path                                 "local/"
+out_path                                  "local/"
 data_directory                            "data"
-feeding_directory                         "global_f50/"
+feeding_directory                         "global/"
 generate_debug_files?                     .true.
 nzone_min                                 200            
 nzone_max                                 250
