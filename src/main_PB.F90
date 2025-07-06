@@ -49,63 +49,105 @@ program main
    use ppplts
 
    implicit none
+   !
+   ! Declaration of arrays and simulation variables
+   !
+   ! Array of individual dust particles (swarms)
+   type(swarm), dimension(:), allocatable, target :: temp_swrm     ! Temporary swarms
+   type(swarm), dimension(:), allocatable, target :: sim_swrm      ! Main simulation swarms
+   type(swarm), dimension(:), allocatable, target :: temp_arr      ! Temporary array for operations
+   integer, dimension(:,:), allocatable :: ncolls     ! Collision matrix between particle bins
+   
+   ! Swarms binned into spatial cells (2D grid)
+   type(list_of_swarms), dimension(:,:), allocatable, target :: bin  
+   
+   ! Swarms binned into radial zones (1D array)
+   type(list_of_swarms), dimension(:), allocatable :: rbin           
 
-   ! the array of the representative particles (swarms) is declared here:
-   type(swarm), dimension(:), allocatable, target                  :: temp_swrm, sim_swrm, temp_arr
-   type(list_of_swarms), dimension(:,:), allocatable, target       :: bin         ! swarms binned into cells
-   type(list_of_swarms), dimension(:), allocatable                 :: rbin        ! swarms binned into radial zones
-   type(hdf5_file_t)                                               :: file
-   real                       :: total
-   real(kind=4), dimension(2) :: elapsed
-   integer             :: i, j, iter, w, nparts
-   real                :: time = 2.19e6*year, time_no ! starting time; when we want to initiate the pressure bump 2Myr after CAI
-   real                :: timeofnextout = 0.0 ! time of next output
-   real                :: resdt = 0.1*year    ! resulting physical time step
-   integer             :: nout = 0 , kont           ! number of the next output
-   real                :: totmass             ! total mass of dust beyond evaporation line
-   character(len=100)  :: ctrl_file, open_file           ! parameter file
-   integer, dimension(:,:), allocatable :: ncolls
-   real                                 :: plts_tot=0., etamax  ! for planetesimal formation
+   ! HDF5 output file handler
+   type(hdf5_file_t) :: file                                        
+   
+   ! General simulation parameters
+   real                       :: total               ! Total time of execution
+   real(kind=4), dimension(2) :: elapsed             ! Elapsed time (e.g. for profiling)
+   integer                   :: i, j, iter, w, nparts ! Loop counters and particle count
+   
+   ! Physical simulation time parameters
+   real :: time = 2.19e6*year        ! Initial simulation time (2 Myr after CAI)
+   real :: time_no                   ! Auxiliary time variable
+   real :: timeofnextout = 0.0       ! Time scheduled for next output
+   real :: resdt = 0.1*year          ! Physical time step
+   integer :: nout = 0, kont         ! Output index and control integer
+   real :: totmass                   ! Total mass of dust beyond evaporation line
+   
+   ! Input / Output file controls
+   character(len=100) :: ctrl_file     ! Input parameter file name
+   character(len=100) :: open_file     ! Possibly the simulation restart file
+   
+   ! Parameters for local simulation runs
 #ifdef LOCAL_SIM
-   integer  :: imax, Nfeed, Nrem, Nin, Nplt_new, Nplt_tot
-   real  :: x, mass_add
-   real  :: prob
-   real :: Mfeed, Mfeed_ri, Mleak, Mleak_ri, Mplt, Mplt_ri, mswarm_old
-   integer :: i_plt, jadd
-   integer :: Nleak, Nleak_ri, Nfeed_ri
-   real :: mswarm_feeding
-   type(swarm), dimension(:), allocatable, target :: feeding_swrm, feeding_swrm_tot, feeding_lagun, temp
-   integer :: Nfluxtot, nout_feed, Ncount, Nlagun, idx
-   character(len=15) :: filename
-#endif
-   real :: Zcrit
-   integer :: stabilize
-#ifdef GLOBAL
-   real :: last_time
-   integer :: Nfluxtot, Nflux
+   integer :: imax                   ! Max index for loop/array
+   integer :: Nfeed, Nrem, Nin       ! Feeding/removal/input particle counters
+   integer :: Nplt_new, Nplt_tot     ! New and total planetesimals
+   real :: x                         ! Variable for Random number generation
+   real :: mass_add                  ! Added mass from global simulation for each timestep
+   
+   real :: prob                      ! Probability (e.g., for stochastic process)
+   real :: Mfeed, Mfeed_ri           ! Mass entering feeding zones
+   real :: Mleak, Mleak_ri           ! Mass leaking out
+   real :: Mplt, Mplt_ri             ! Planetesimal mass
+   real :: mswarm_old                ! Swarm mass before interaction
+   
+   integer :: i_plt, jadd            ! Loop variables or particle counters
+   integer :: Nleak, Nleak_ri        ! Number of leaking swarms
+   integer :: Nfeed_ri               ! Number of feeding swarms in RI region
+   real :: mswarm_feeding            ! Feeding swarm mass
+   
+   ! Arrays for feeding zone particles
    type(swarm), dimension(:), allocatable, target :: feeding_swrm
-   character(len=15) :: filename
+   type(swarm), dimension(:), allocatable, target :: feeding_swrm_tot
+   type(swarm), dimension(:), allocatable, target :: feeding_lagun
+   type(swarm), dimension(:), allocatable, target :: temp             ! Temporary swarms
+
+   integer :: Nfluxtot               ! Total number of flux events
+   integer :: nout_feed              ! Output index for feeding diagnostics
+   integer :: Ncount                 ! General counter
+   integer :: Nlagun                 ! Number of particles in laguna
+   integer :: idx                    ! General-purpose index
+   character(len=15) :: filename     ! Output file name (short)
 #endif
+
+   ! related planetesimal formation
+   real :: plts_tot = 0.0              ! Total mass in planetesimals
+   real :: etamax                      ! Maximum value of metallicity
+   real :: Zcrit                    ! Critical metallicity for planetesimal formation
+   integer :: stabilize             ! Number of collision loops before acvection starts
+
+! Parameters for global simulation runs
+#ifdef GLOBAL
+   real :: last_time               ! Time of last update/output
+   integer :: Nfluxtot, Nflux      ! Flux-related counters
+   
+   ! Feeding swarms for global simulation
+   type(swarm), dimension(:), allocatable, target :: feeding_swrm
+   character(len=15) :: filename    ! Output filename for global mode
+#endif
+
+! Parameters for test cases with constant flux
 #ifdef TEST_CONST_FLUX
-   real :: prop_const ! fraction of rigid/fragile at the time given
-   integer :: Nfeed_ri_lagun
+   real :: prop_const               ! Contant rigid mass fraction of thefeeding flux
+   integer :: Nfeed_ri_lagun        ! helper variable for calculating feeding rigid mass *"lagun=helper" in basque
 #endif
+
    ! random number generator initialization
    call init_random_seed
 
    ! reading parameters and initializing the simulation
    call get_command_argument(1, ctrl_file)
-   write(*,*) '2DMC v0.1'
-   write(*,*) '------------------------------------------------------------------'
-   write(*,*) 'Reading parameters...'
    call read_parameters(ctrl_file)
-   write(*,*) '------------------------------------------------------------------'
-   write(*,*) 'Initializing disk...'
    call init_struct()
 
-
-   write(*,*) '------------------------------------------------------------------'
-   write(*,*) 'Initializing representative bodies...'
+   ! restart simulation?
    if (restart) then
       stabilize = 0
       write(*,*) ' Reading restart...'
@@ -864,7 +906,7 @@ endif
    write(*,*) '------------------------------------------------------------------'
    write(*,*) 'tend exceeded, finishing simulation...'
 
-   ! this causes problems when used with intel compilers, so just remove it in case you want to use one
+   ! calclate time of execution
    total = etime(elapsed)
    write(*,*) 'Elapsed time [s]: ', total, ' user:', elapsed(1), ' system:', elapsed(2)
 
