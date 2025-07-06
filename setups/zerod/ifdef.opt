@@ -3,5 +3,5 @@
 # without planetesimal formation
 CFLAGS+=-D NO_SI
 
-# 0 D simulation
+# 0D simulation
 CFLAGS+=-D ZERO_D
