@@ -410,8 +410,6 @@ imax = size(temp_swrm)
 #ifdef ZERO_D
       resdt = 1./omegaK(minval(sim_swrm(:)%rdis), time)
       write(*,*) 'time is ', time/year
-      mswarm = dtg*Msolid_PB(minrad0, maxrad0, time)/size(sim_swrm)
-      sim_swrm(:)%npar = mswarm/sim_swrm(:)%mass
 #else
       ! determining the time step
       if (iter == 0 .or. (stabilize > 0)) then 
