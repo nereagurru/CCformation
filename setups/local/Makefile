@@ -13,7 +13,7 @@ OBJ_DIR=../../obj/local
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.F90 | $(OBJ_DIR)
 	$(H5F) $(FFLAGS) $(CFLAGS) -J$(OBJ_DIR) -c $< -o $@
 
-local_f50: $(OBJ_DIR)/main_PB.o $(OBJ_DIR)/timestep.o $(OBJ_DIR)/hdf5output.o $(OBJ_DIR)/collisions.o $(OBJ_DIR)/advection.o $(OBJ_DIR)/grid.o $(OBJ_DIR)/initproblem_itp.o $(OBJ_DIR)/discstruct_itp.o $(OBJ_DIR)/parameters.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/types.o $(OBJ_DIR)/constants.o $(OBJ_DIR)/ppplts.o
+local: $(OBJ_DIR)/main_PB.o $(OBJ_DIR)/timestep.o $(OBJ_DIR)/hdf5output.o $(OBJ_DIR)/collisions.o $(OBJ_DIR)/advection.o $(OBJ_DIR)/grid.o $(OBJ_DIR)/initproblem_itp.o $(OBJ_DIR)/discstruct_itp.o $(OBJ_DIR)/parameters.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/types.o $(OBJ_DIR)/constants.o $(OBJ_DIR)/ppplts.o
 	$(H5F) $(FFLAGS) $(CFLAGS) $(LDFLAGS) $? -o $@
 
 $(OBJ_DIR)/constants.o: $(SRC_DIR)/constants.F90
