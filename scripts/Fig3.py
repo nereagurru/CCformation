@@ -1,5 +1,6 @@
 # to reproduce figure 3 
-
+# before running the script, copy disk data (*.dat, *.info) into "../disk/.".
+# copy also "zerod_data_reduced" directory to "../outputs/."
 
 import h5py
 import os
