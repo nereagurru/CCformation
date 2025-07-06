@@ -1,4 +1,6 @@
 # reproduce figure 6
+# before running the script, copy "local_data_reduced/" directory to ../outputs/.
+# and the disk data files (*.dat, *.info) to ../disk/.
 
 import h5py
 import os
@@ -11,7 +13,7 @@ from astropy.constants import G, k_B, N_A
 from astropy import units as u
 import matplotlib.gridspec as gridspec
 
-#%%
+
 # read local data and calculate dust surface density
 
 output_dir = "../outputs/local_data_reduced"
@@ -67,7 +69,7 @@ for i in range(len(t_eval)):
 
 
 
-#%% read disk data and create function to calculate velocities
+# read disk data and create function to calculate velocities
 
 
 class Disk:
@@ -188,9 +190,9 @@ class Disk:
 
 
 disk = Disk('../disk/')
-#%% make plot
 
 
+# make plot
 
 fig = plt.figure(figsize=(20, 10))
 gs = gridspec.GridSpec(2, 2, width_ratios=[2, 1])
