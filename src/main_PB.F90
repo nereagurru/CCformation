@@ -414,7 +414,6 @@ imax = size(temp_swrm)
       sim_swrm(:)%npar = mswarm/sim_swrm(:)%mass
 #else
       ! determining the time step
-      write(*,*) stabilize
       if (iter == 0 .or. (stabilize > 0)) then 
          if (restart .eqv. .False.) resdt = 1./omegaK(minval(sim_swrm(:)%rdis), time)
       else 
@@ -455,7 +454,6 @@ imax = size(temp_swrm)
 
             ! write all of them at once
             if (Nflux > 0) then
-               write(*,*) 'Nflux is ',Nflux 
                call hdf5_file_write(file, feedingdir, feeding_swrm, time, resdt, 'create', nout-1, mswarm, Nflux)
             endif
             last_time = time
@@ -485,12 +483,6 @@ imax = size(temp_swrm)
             open(26,file=trim(output_path)//trim('feed_leak.dat'),status='unknown',position='append')          
             write(26,*) time/year, Mfeed, Mfeed_ri, Mleak, Mleak_ri, Mplt, Mplt_ri
             close(26)
-#endif
-
-#ifdef ZERO_D
-         write(*,*) 'time before : ', time/year
-         time = time +  0.*year
-         write(*,*) 'time after : ', time/year
 #endif
       endif
 
@@ -530,7 +522,6 @@ endif
       do i = 1, size(g%rce)
          do j = 1, size(g%zce,dim=2)
             if (.not.allocated(bin(i, j)%p)) cycle
-            !write(*,*) '    entering zone',i,j,'including ',size(bin(i, j)%p),' rbs','.....', bin(i,j)%first_idx
             call mc_collisions(i, j, bin, sim_swrm, resdt, time, ncolls(i,j), bin(i, 1)%first_idx)
          enddo
       enddo
@@ -550,7 +541,6 @@ endif
             enddo
          enddo
          etamax = nparts*mswarm/pi/(g%rup(i)**2 - g%rlo(i)**2)/sigmag(g%rce(i),time) 
-         !write(*,*) "Integrated max metallicity at i:", i, " is ", etamax
 
          if (modulo(iter,fout) == 0 .or. time+resdt>=timeofnextout) then
             open(26,file=trim(output_path)//trim('metallicity_integrated.dat'),status='unknown',position='append')
@@ -564,13 +554,7 @@ endif
 #else
          if (etamax > Zcrit) then 
             write(*,*) ' Planetesimal formation!'
-            call  planetesimal_formation(i, rbin, sim_swrm, resdt, time &
-! deleate below
-#ifdef SI_MAX_EFF
-                                          & , Zcrit, etamax &
-#endif
-! deleate up
-                                          & )
+            call  planetesimal_formation(i, rbin, sim_swrm, resdt, time)
             plts_tot = plts_tot + plts_mass
          endif
 #endif
@@ -600,8 +584,6 @@ endif
       ! how many leak
       Nleak = Nmax - Nin - Nplt_new
 
-#ifdef TEST_NO_EVOL
-#else
       ! how many feed from feeding file (not to local, that is calculated after mswarm correction)
       Ncount = 0
       allocate(temp(size(feeding_swrm_tot)))
@@ -632,26 +614,26 @@ endif
          do i = 1, size(feeding_swrm_tot)
 #ifdef TEST_CONST_FLUX
 
-         feeding_swrm_tot(i)%f_CH = prop_const
-         feeding_swrm_tot(i)%f_matrix = 1.-prop_const
-
-
-         call random_number(x)
-         if (x<prop_const) then
-            feeding_swrm_tot(i)%rigid = 1
-            if (prop_const*feeding_swrm_tot(i)%mass < feeding_swrm_tot(i)%rigid_mass) then
-               feeding_swrm_tot(i)%mass = feeding_swrm_tot(i)%rigid_mass
-               feeding_swrm_tot(i)%f_matrix = 0.
-               feeding_swrm_tot(i)%f_CH = 1.
+            feeding_swrm_tot(i)%f_CH = prop_const
+            feeding_swrm_tot(i)%f_matrix = 1.-prop_const
+   
+   
+            call random_number(x)
+            if (x<prop_const) then
+               feeding_swrm_tot(i)%rigid = 1
+               if (prop_const*feeding_swrm_tot(i)%mass < feeding_swrm_tot(i)%rigid_mass) then
+                  feeding_swrm_tot(i)%mass = feeding_swrm_tot(i)%rigid_mass
+                  feeding_swrm_tot(i)%f_matrix = 0.
+                  feeding_swrm_tot(i)%f_CH = 1.
+               endif
+            else
+               feeding_swrm_tot(i)%rigid = 0
+               if (prop_const*feeding_swrm_tot(i)%mass < feeding_swrm_tot(i)%rigid_mass) then
+                  feeding_swrm_tot(i)%f_matrix = 1.
+                  feeding_swrm_tot(i)%f_CH = 0.
+               endif
             endif
-         else
-            feeding_swrm_tot(i)%rigid = 0
-            if (prop_const*feeding_swrm_tot(i)%mass < feeding_swrm_tot(i)%rigid_mass) then
-               feeding_swrm_tot(i)%f_matrix = 1.
-               feeding_swrm_tot(i)%f_CH = 0.
-            endif
-         endif
-         feeding_swrm_tot(i)%dens = 1./(feeding_swrm_tot(i)%f_CH/ridens + (1.-feeding_swrm_tot(i)%f_matrix)/matdens)
+            feeding_swrm_tot(i)%dens = 1./(feeding_swrm_tot(i)%f_CH/ridens + (1.-feeding_swrm_tot(i)%f_matrix)/matdens)
 
 #endif
 
@@ -676,31 +658,10 @@ endif
          endif
       endif
 
-#endif
-!remove up
       
 
-      write(*,*) 'Ncount is ', Ncount, ' and mswarm was ', mswarm_feeding
-
-#ifdef TEST_NO_EVOL
-      mass_add = feeding_fux*resdt
-#else
       mass_add = real(Ncount)*mswarm_feeding
-#endif
 
-! REMOVE below
-#ifdef PURE_MATRIX_TEST
-      mass_add = mass_add*10.
-#ifdef TEST_NO_EVOL
-      feeding_swrm_tot(:)%npar = feeding_swrm_tot(:)%npar*10.
-#else
-      if (Ncount>0) then
-         feeding_swrm(:)%npar = feeding_swrm(:)%npar*10.
-      endif
-#endif
-      
-#endif
-! REMOVE upper
       mswarm_old = mswarm
       mswarm = (real(Nin)*mswarm + mass_add)/real(Nmax)
       Nfeed = int(mass_add/mswarm) 
@@ -818,16 +779,8 @@ endif
             
             ! randomly choose with what particle to initialize
             call random_number(x)
-#ifdef TEST_NO_EVOL
-            idx = int(x*size(feeding_swrm_tot)) + 1
-            sim_swrm(j+i) = feeding_swrm_tot(idx)
-            call random_number(x)
-            sim_swrm(j+i)%tfor = x*resdt + time
-#else
             idx = int(x*size(feeding_swrm)) + 1
             sim_swrm(j+i) = feeding_swrm(idx)
-#endif
-            
             sim_swrm(j+i)%idnr = Ntot+i
             sim_swrm(j+i)%plt = 0
             sim_swrm(j+i)%f_matrix = 1.- sim_swrm(j+i)%f_CH
@@ -837,16 +790,6 @@ endif
             sim_swrm(j+i)%velr = 1.e-20
             sim_swrm(j+i)%velz = 1.e-20
             sim_swrm(j+i)%coll_f = 0
-! REMOVE BELOW
-#ifdef PURE_MATRIX_TEST
-            sim_swrm(j+i)%f_CH = 0.
-            sim_swrm(j+i)%f_matrix = 1.
-            sim_swrm(j+i)%rigid = 0
-            sim_swrm(j+i)%rigid_mass = 0.
-            sim_swrm(j+i)%mass = sim_swrm(i)%mass*(sim_swrm(i)%dens/matdens)**(2.*third)
-            sim_swrm(j+i)%dens = matdens
-#endif
-! REMOVE UP
             Nfeed_ri = Nfeed_ri + sim_swrm(j+i)%rigid
 
             call mc_advection_element(sim_swrm(j+i), time+resdt-sim_swrm(j+i)%tfor, sim_swrm(j+i)%tfor)
@@ -869,14 +812,10 @@ endif
       Nplt_tot = Nplt_tot + Nplt_new
       imax = Nplt_tot + Nmax
 
-#ifdef TEST_NO_EVOL
-#else
-      if (Ncount>0) deallocate(feeding_swrm)
-#endif
 
+      if (Ncount>0) deallocate(feeding_swrm)
    endif
 #endif
-
 
       if (stabilize > 0) then
          stabilize = stabilize - 1
@@ -903,8 +842,6 @@ endif
    deallocate(bin)
    deallocate(rbin)
 
-   write(*,*) '------------------------------------------------------------------'
-   write(*,*) 'tend exceeded, finishing simulation...'
 
    ! calclate time of execution
    total = etime(elapsed)
