@@ -6,6 +6,7 @@ import glob
 import numpy as np
 from Plotting import init_plot
 import matplotlib.pyplot as plt
+from astropy import units as u
 
 
 
@@ -32,8 +33,7 @@ t_eval += t_CAI
 
 nrl = 16
 rl = np.linspace(5.725, 6.5, nrl)
-
-from_AU_to_cm = 1.496*10**13
+from_AU_to_cm = (1*u.AU).to(u.cm)
 
 sigmadl = np.empty((rl.shape[0]-1, t_eval.shape[0]))
 sigmadl_fri = np.empty((rl.shape[0]-1, t_eval.shape[0]))
