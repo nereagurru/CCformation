@@ -72,7 +72,7 @@ ax.scatter([], [],
 ax.scatter(1-pebbles_fri, t_arr/10**6-t_CAI,
             color='#FCC98A', s=100, zorder=-1, marker="s", label='Pebbles')
 
-# compare with meteoritic data, from Hellmann et al 2023
+# compare with meteoritic data, from Hellmann et al. 2023
 
 CC_label = [r'$\rm{CR}$', r'$\rm{CO}$',
             r'$\rm{CV}$', r'$\rm{CM}$',
@@ -82,7 +82,7 @@ tacc = np.array([[3.5, 4.], [2.2, 2.6], [2.3, 3.1],
                  [2.5, 4.2], [3, 4.2], [3.1, 4.1]]).T
 
 
-
+# data from Hellmann et al. 2020
 fm = np.array([[0.09-0.05, 0.09+0.05], [0.2-0.12, 0.2+0.12], [0.3-0.07, 0.3+0.07],
                 [0.41-0.12, 0.41+0.12], [0.64-0.23, 0.64+0.23], [1., 1.]]).T
 ax.errorbar(fm.mean(axis=0), tacc.mean(axis=0),
