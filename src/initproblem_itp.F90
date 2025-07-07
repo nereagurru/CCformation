@@ -33,11 +33,13 @@ module initproblem
       real                                             :: mdust       ! mass of the dust in the simulatated domain
       real, dimension(2)                               :: rand        ! random numbers
       real                                             :: Hg, Hd      ! pressure height scale of the gas
-      integer                                          :: i
-      real                                             :: x
-      real                                             :: amin ! if a_limited > ari_min amin=ari_min
-      real :: Stlim, power
-            ! total mass of dust maxrad0>r>min_loc
+      integer                                          :: i           ! counter
+      real                                             :: x           ! random variable
+      real                                             :: amin        ! if a_limited > ari_min amin=ari_min
+      real                                             :: Stlim       ! Stokes number limit
+      real                                             :: power       ! power-index for particle size distribution
+
+      ! total mass of dust maxrad0>r>min_loc
       mdust = Msolid_PB(minrad0, maxrad0, time) 
 
       ! mass of one swarm
@@ -109,17 +111,21 @@ module initproblem
    subroutine init_swarms_PB2(Ntot, swrm, time)
       implicit none
       type(swarm), dimension(:), allocatable, target   :: swrm        ! list of all swarms in the simulation
-      integer, intent(inout)                              :: Ntot        ! number of all swarms
+      integer, intent(inout)                           :: Ntot        ! number of all swarms
       real, intent(inout)                              :: time        ! initial time
       real                                             :: mdust       ! mass of the dust in the simulatated domain
       real, dimension(2)                               :: rand        ! random numbers
       real                                             :: Hg, Hd      ! pressure height scale of the gas
-      integer                                          :: i
-      real, dimension(:), allocatable                  :: rfor_arr
-      real                                             :: x
-      real                                             :: amin ! if a_limited > ari_min amin=ari_min
-      real :: ari_max, pri, ari_static
-      real :: Stlim, power 
+      integer                                          :: i           ! counter
+      real, dimension(:), allocatable                  :: rfor_arr    ! radial location of swarms
+      real                                             :: x           ! random variable
+      real                                             :: amin        ! if a_limited > ari_min amin=ari_min
+      real                                             :: ari_max     ! maximum rigid particle size
+      real                                             :: pri         ! corrected probability
+      real                                             :: ari_static  ! rigid particle size from distribution
+      real                                             :: Stlim       ! Stokes number limit
+      real                                             :: power       ! power-index for particle size distribution
+
 
       ! total mass of dust maxrad0>r>min_loc
       mdust = Msolid_PB(minrad0, maxrad0, time) 
