@@ -14,7 +14,7 @@ Email: gurrutxaga@mps.mpg.de
 
 ## SHARING/ACCESS Code
 
-The code will be made public ones the paper is public
+Upon acceptance, this code will be published as a formal release on Zenodo.
 
 ## FILE OVERVIEW
 
@@ -22,8 +22,8 @@ Main files:
 - src: all .F90 programs
 - disk: data from diskevol (download data inside disk file to run this code)
 - setup: compilation and parameter information
-- outputs: for data storaged
-- scripts: generate all figures from the main manuscript
+- outputs: for data storage
+- scripts: generate all figures from the main manuscript 
 - obj: storage of temporary ".mod" and ".o" files
 
 ## Prerequisites
