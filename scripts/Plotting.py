@@ -25,11 +25,7 @@ def init_plot(ax, title='', xlabel='', ylabel='', font = 40,
     None.
 
     """
-    # plt.rcParams.update({
-    #     "text.usetex": True,
-    #     "font.family": "sans-serif",
-    #     "font.sans-serif": ["Helvetica"]})
-    #plt.rc('text.latex', preamble=r'\usepackage{amssymb}\usepackage{xcolor}')
+
     plt.rcParams['axes.linewidth'] = 2.25
     plt.rcParams.update({'font.size': font})
     
