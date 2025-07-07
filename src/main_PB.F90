@@ -314,7 +314,7 @@ if (restart) then                                  ! restart simulation
 
 
 #ifdef TEST_CONST_FLUX
-   prop_const = 0.5
+   prop_const = 0.3
 #endif
    ! correction in case some swarms in the feeding flux were formed before "time"
    Ncount = 0
