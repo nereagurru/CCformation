@@ -68,17 +68,15 @@ program main
    type(hdf5_file_t) :: file                                        
    
    ! General simulation parameters
-   real                       :: total               ! Total time of execution
-   real(kind=4), dimension(2) :: elapsed             ! Elapsed time (e.g. for profiling)
-   integer                   :: i, j, iter, w, nparts ! Loop counters and particle count
-   
-   ! Physical simulation time parameters
-   real :: time = 2.19e6*year        ! Initial simulation time (2 Myr after CAI)
-   real :: time_no                   ! Auxiliary time variable
-   real :: timeofnextout = 0.0       ! Time scheduled for next output
-   real :: resdt = 0.1*year          ! Physical time step
-   integer :: nout = 0, kont         ! Output index and control integer
-   real :: totmass                   ! Total mass of dust beyond evaporation line
+   real                       :: total                 ! Total time of execution
+   real(kind=4), dimension(2) :: elapsed               ! Elapsed time
+   integer                    :: i, j, iter, w, nparts ! Loop counters and particle count
+   real                       :: time = 2.19e6*year    ! Initial simulation time (2 Myr after CAI)
+   real                       :: time_no               ! Auxiliary time variable
+   real                       :: timeofnextout = 0.0   ! Time scheduled for next output
+   real                       :: resdt = 0.1*year      ! Physical time step
+   integer                    :: nout = 0, kont        ! Output index and control integer
+   real                       :: totmass               ! Total mass of dust beyond evaporation line
    
    ! Input / Output file controls
    character(len=100) :: ctrl_file     ! Input parameter file name
@@ -86,7 +84,7 @@ program main
    
    ! Parameters for local simulation runs
 #ifdef LOCAL_SIM
-   integer :: imax                   ! Max index for loop/array
+   integer :: imax                   ! counter
    integer :: Nfeed, Nrem, Nin       ! Feeding/removal/input particle counters
    integer :: Nplt_new, Nplt_tot     ! New and total planetesimals
    real :: x                         ! Variable for Random number generation
@@ -98,9 +96,9 @@ program main
    real :: Mplt, Mplt_ri             ! Planetesimal mass
    real :: mswarm_old                ! Swarm mass before interaction
    
-   integer :: i_plt, jadd            ! Loop variables or particle counters
-   integer :: Nleak, Nleak_ri        ! Number of leaking swarms
-   integer :: Nfeed_ri               ! Number of feeding swarms in RI region
+   integer :: i_plt, jadd            ! Loop counters
+   integer :: Nleak, Nleak_ri        ! Number of leaking swarms (total, rigids)
+   integer :: Nfeed_ri               ! Number of feeding rigid swarms
    real :: mswarm_feeding            ! Feeding swarm mass
    
    ! Arrays for feeding zone particles
@@ -109,11 +107,11 @@ program main
    type(swarm), dimension(:), allocatable, target :: feeding_lagun
    type(swarm), dimension(:), allocatable, target :: temp             ! Temporary swarms
 
-   integer :: Nfluxtot               ! Total number of flux events
+   integer :: Nfluxtot               ! Total number of particles from feeding flux
    integer :: nout_feed              ! Output index for feeding diagnostics
-   integer :: Ncount                 ! General counter
-   integer :: Nlagun                 ! Number of particles in laguna
-   integer :: idx                    ! General-purpose index
+   integer :: Ncount                 ! Counter
+   integer :: Nlagun                 ! Counter
+   integer :: idx                    ! index finder
    character(len=15) :: filename     ! Output file name (short)
 #endif
 
@@ -121,12 +119,12 @@ program main
    real :: plts_tot = 0.0              ! Total mass in planetesimals
    real :: etamax                      ! Maximum value of metallicity
    real :: Zcrit                    ! Critical metallicity for planetesimal formation
-   integer :: stabilize             ! Number of collision loops before acvection starts
+   integer :: stabilize             ! Number of collision loops before advection starts
 
 ! Parameters for global simulation runs
 #ifdef GLOBAL
    real :: last_time               ! Time of last update/output
-   integer :: Nfluxtot, Nflux      ! Flux-related counters
+   integer :: Nfluxtot, Nflux      ! counters
    
    ! Feeding swarms for global simulation
    type(swarm), dimension(:), allocatable, target :: feeding_swrm
@@ -135,8 +133,8 @@ program main
 
 ! Parameters for test cases with constant flux
 #ifdef TEST_CONST_FLUX
-   real :: prop_const               ! Contant rigid mass fraction of thefeeding flux
-   integer :: Nfeed_ri_lagun        ! helper variable for calculating feeding rigid mass *"lagun=helper" in basque
+   real :: prop_const               ! Contant rigid mass fraction of the feeding flux
+   integer :: Nfeed_ri_lagun        ! helper variable for calculating feeding rigid mass
 #endif
 
    ! random number generator initialization
@@ -147,7 +145,7 @@ program main
    call read_parameters(ctrl_file)
    call init_struct()
 
-   ! restart simulation?
+   ! do we restart simulation?
    if (restart) then
       stabilize = 0
       write(*,*) ' Reading restart...'
