@@ -1,5 +1,6 @@
 # reproduce figure 4
-# before running the script, copy "local_data_reduced" directory to "../outputs/."
+# before running the script, copy "global_data_reduced" and "local_data_reduced" 
+# directories to "../outputs/."
 import h5py
 import os
 import glob
