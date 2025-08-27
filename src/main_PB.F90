@@ -1,16 +1,18 @@
 ! This code is an extended version of:
-! Drazkowska, Windmark & Dullemond (2013) A&A 556, A37, and Vaikundaraman et al. (2025, in prep)
+! Drazkowska, Windmark & Dullemond (2013) A&A 556, A37, and Vaikundaraman, Gurrutxaga & Drazkowska (2025, submitted to Journal of Open Source Software)
 
-! Authors of this version: Nerea Gurrutxaga, Joanna Drazkowska, Vignesh Vaikundaraman
+! Authors of this version: Nerea Gurrutxaga, Joanna Drazkowska, Vignesh Vaikundaraman, Thorsten Kleine
 ! Max Planck Institute for Solar System Research, Göttingen, Germany
 !
 ! This code performs a 2D simulation of dust evolution in a protoplanetary disk.
 ! The gas disk is an input and is not evolved by mcdust (discstruct_itp module)
 ! The dust is treated as representative particles (RPs) undergoing advection (advection module)
-! as well as collisions performed with Monte Carlo algorithm (collisions module)
-! To perform collisions the RPs are binned using an adaptive grid (grid module)
+! as well as collisions performed with the Monte Carlo algorithm (collisions module)
+! To perform collisions, the RPs are binned using an adaptive grid (grid module)
 !
-! 
+! There are 3 main preprocessors used for the simulations in the main manuscript (see .opt files): ZERO_D, GLOBAL, LOCAL
+! Other 2 preprocessors are used for supplementary material: TEST_CONST_FLUX, NO_SI
+!
 
 program main
    use constants
@@ -82,24 +84,29 @@ program main
    character(len=100) :: ctrl_file     ! Input parameter file name
    character(len=100) :: open_file     ! Possibly the simulation restart file
    
-   ! Parameters for local simulation runs
 #ifdef LOCAL_SIM
+   ! Parameters for local simulation runs
    integer :: imax                   ! counter
-   integer :: Nfeed, Nrem, Nin       ! Feeding/removal/input particle counters
-   integer :: Nplt_new, Nplt_tot     ! New and total planetesimals
-   real :: x                         ! Variable for Random number generation
+   integer :: Nrem, Nin              ! Number of particles to remove/ number of particles that stay in simulation
+   integer :: Nleak, Nleak_ri        ! Number of leaking swarms every timestep (total, rigids)
+   real :: Mleak, Mleak_ri           ! Total mass leaking out
+
+   integer :: Nfeed, Nfeed_ri        ! Number of feeding swarms every timestep (total, rigids)
+   real :: Mfeed, Mfeed_ri           ! Total mass entering local simulation
+
+   integer :: Nfluxtot               ! Total number of particles from feeding flux
+   integer :: nout_feed              ! Output index for feeding diagnostics
    real :: mass_add                  ! Added mass from global simulation for each timestep
-   
-   real :: prob                      ! Probability (e.g., for stochastic process)
-   real :: Mfeed, Mfeed_ri           ! Mass entering feeding zones
-   real :: Mleak, Mleak_ri           ! Mass leaking out
-   real :: Mplt, Mplt_ri             ! Planetesimal mass
-   real :: mswarm_old                ! Swarm mass before interaction
-   
-   integer :: i_plt, jadd            ! Loop counters
-   integer :: Nleak, Nleak_ri        ! Number of leaking swarms (total, rigids)
-   integer :: Nfeed_ri               ! Number of feeding rigid swarms
    real :: mswarm_feeding            ! Feeding swarm mass
+
+   integer :: Nplt_new, Nplt_tot     ! New and total planetesimals
+   real :: Mplt, Mplt_ri             ! Total planetesimal mass
+
+   real :: x                         ! Variable for Random number generation
+   real :: prob                      ! Variable for calculating probability of adding/removing particle
+   real :: mswarm_old                ! Swarm mass before interaction
+   integer :: i_plt, jadd            ! Loop counters
+
    
    ! Arrays for feeding zone particles
    type(swarm), dimension(:), allocatable, target :: feeding_swrm
@@ -107,8 +114,6 @@ program main
    type(swarm), dimension(:), allocatable, target :: feeding_lagun
    type(swarm), dimension(:), allocatable, target :: temp             ! Temporary swarms
 
-   integer :: Nfluxtot               ! Total number of particles from feeding flux
-   integer :: nout_feed              ! Output index for feeding diagnostics
    integer :: Ncount                 ! Counter
    integer :: Nlagun                 ! Counter
    integer :: idx                    ! index finder
@@ -116,7 +121,6 @@ program main
 #endif
 
    ! related planetesimal formation
-   real :: plts_tot = 0.0              ! Total mass in planetesimals
    real :: etamax                      ! Maximum value of metallicity
    real :: Zcrit                    ! Critical metallicity for planetesimal formation
    integer :: stabilize             ! Number of collision loops before advection starts
@@ -133,8 +137,8 @@ program main
 
 ! Parameters for test cases with constant flux
 #ifdef TEST_CONST_FLUX
-   real :: prop_const               ! Contant rigid mass fraction of the feeding flux
-   integer :: Nfeed_ri_lagun        ! helper variable for calculating feeding rigid mass
+   real :: prop_const               ! Constant rigid mass fraction of the feeding flux
+   integer :: Nfeed_ri_lagun        ! Helper variable for calculating the feeding rigid mass
 #endif
 
    ! random number generator initialization
@@ -145,7 +149,7 @@ program main
    call read_parameters(ctrl_file)
    call init_struct()
 
-   ! do we restart simulation?
+   ! do we restart the simulation?
    if (restart) then
       stabilize = 0
       write(*,*) ' Reading restart...'
@@ -551,7 +555,6 @@ endif
          if (etamax > Zcrit) then 
             write(*,*) ' Planetesimal formation!'
             call  planetesimal_formation(i, rbin, sim_swrm, resdt, time)
-            plts_tot = plts_tot + plts_mass
          endif
 #endif
       enddo
