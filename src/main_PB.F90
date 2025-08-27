@@ -161,9 +161,9 @@ program main
                           &)
       
       timeofnextout = time + dtime
-      m0 = 4. * third * pi * r0**3 * matdens ! CREATE a function in initproblem to calculate this
-      mCH_min = 4. * third * pi * (aCH_min)**3 * ridens
-      mCH_max = 4. * third * pi * (aCH_max)**3 * ridens
+      m0 = 4. * third * pi * r0**3 * matdens ! mass of fragile monomer
+      mCH_min = 4. * third * pi * (aCH_min)**3 * ridens ! minimum mass of rigid monomer
+      mCH_max = 4. * third * pi * (aCH_max)**3 * ridens ! maximum mass of rigid monomer
 
       do i=1, size(temp_swrm)
          temp_swrm(i)%f_matrix = 1. - temp_swrm(i)%f_CH
@@ -373,7 +373,7 @@ else      ! no restart
 
 endif
 
-! the following variables save info about cumulative mass that has entered or leaved the simulation
+! the following variables save info about cumulative mass that has entered or left the simulation
 Mfeed = 0.
 Mfeed_ri = 0.
 Mleak = 0.
