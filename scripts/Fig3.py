@@ -15,26 +15,19 @@ from astropy.constants import k_B, N_A
 
 
 
-# read disk data and create function to calculate sound speed and gas surface density
+# read disk data and create a function to calculate sound speed and gas surface density
 
 
      
 # location of data where diskevol results are saved
 testfile = '../disk/'
+
 # read time grid
 t = (np.loadtxt(testfile + 'time.dat',dtype=float)*u.s).to(u.Myr)
 # read position grid and remove first element
 r = np.loadtxt(testfile + 'grid.info',dtype=float)
 n = int(r[0])
-
 r = (r[1::]*u.cm).to(u.AU)
-
-# read temperature across the disk and over time and create its interpolation function
-Td_data = np.loadtxt(testfile+ 'temperature.dat', dtype=float, 
-                     skiprows=2).reshape((n, t.shape[0]), order='F')*u.K
-
-Td = interpolate.interp2d(t, r, Td_data)
-
 
 # read gas surface density over time and create its interpolation function
 sigma_dat = np.loadtxt(testfile+'sigma.dat', dtype=float,
@@ -52,19 +45,7 @@ def f_sigma(t, r):
             else np.squeeze([sigma(t, ri) for ri in r])*u.g/u.cm**2
     return sigma_
         
-
-# midplane temperature 
-def f_Td(t, r):
-    if not isinstance(t, u.Quantity) : TypeError('time variable must be a float')
-    Td_ = np.squeeze(Td(t, r))*u.K if isinstance(r, u.Quantity) \
-         else np.squeeze([Td(t, ri) for ri in r])*u.K
-    return Td_
     
-    
-# function for sound speed (t in *u.Myr and r in *u.AU) 
-def f_cs(t, r):
-    return (np.sqrt(k_B*N_A*f_Td(t, r)/(2.3*u.g/u.mol))).to(u.m/u.s)
-
 # particle size assuming Epstein regime
 def a_Epstein(St, rhoi, sigma):
     return 2/np.pi*St*sigma/rhoi
@@ -119,7 +100,7 @@ ymin, ymax = 10**-3, 10
 
 
 # color to indicate fragile and rigid
-colors = ['#3274B5', '#8B551B']
+colors = {'fragile':'#3274B5', 'rigid':'#8B551B', 'planetesimal':'blueviolet'}
 
 
 
@@ -173,16 +154,6 @@ for idx_time in range(0,4):
     #create subplot
     init_plot(ax[i,j], f'{time:.02f} Myr', xlabel, ylabel, font=30) 
    
-    # Stokes number limited by fragmentation
-    alphat=10**-4
-    vf = 2 # in m/s
-    Stfrag = 0.37/3/alphat*(vf/f_cs((t_arr[itt]*u.yr).to(u.Myr), 6.1*u.AU))**2
-
-    # particle size assuming Epstein regime
-    CH = 0 if idx_time == 3 else 0.5
-    afrag = a_Epstein(Stfrag, f_densi(CH=CH), f_sigma((t_arr[itt]*u.yr).to(u.Myr), 6.1*u.AU))        
-
-    
 
     
     # initiate empty arrays for dust surface density
@@ -247,26 +218,45 @@ for idx_time in range(0,4):
     
     # plot line of fragile material 
     ax[i,j].plot(a_plot, a_plot*np.mean((sigma_a[:,:]-sigma_a_fri[:,:]), axis=0),
-                 lw=lw, c=colors[0])
+                 lw=lw, c=colors['fragile'])
     
     # plot line of rigid material 
-    ax[i,j].plot(a_plot, a_plot*np.mean(sigma_a_fri[:,:], axis=0), lw=lw, c=colors[1])
+    ax[i,j].plot(a_plot, a_plot*np.mean(sigma_a_fri[:,:], axis=0), lw=lw, c=colors['rigid'])
     
 
 
-    ax[i,j].vlines(x=afrag.value, ymin=ymin, ymax=ymax, color='k',
-                   lw=lw/2, ls='--', zorder=0)
+    
+    # particle size assuming Epstein regime
+    CH = 0 if idx_time == 3 else 0.5
+    alim1 = a_Epstein(0.01, f_densi(CH=CH), f_sigma((t_arr[itt]*u.yr).to(u.Myr), 6.1*u.AU))        
+
+ 
+    ax[i,j].vlines(x=alim1.value, ymin=ymin, ymax=ymax, color=colors['planetesimal'],
+                   lw=lw/2, zorder=0, ls='--')
+    # particle size assuming Epstein regime
+    CH = 1 if idx_time == 3 else 0.5
+    alim2 = a_Epstein(1, f_densi(CH=CH), f_sigma((t_arr[itt]*u.yr).to(u.Myr), 6.1*u.AU))        
+
+ 
+    ax[i,j].vlines(x=alim2.value, ymin=ymin, ymax=ymax, color=colors['planetesimal'],
+                   lw=lw/2, zorder=0, ls='--')
     
 
+    ax[i,j].axvspan(alim1.value, alim2.value, ymin=ymin, ymax=ymax, color=colors['planetesimal'],
+                   zorder=0, alpha=0.1)
+# Add panel labels
+labels = ['A', 'B', 'C', 'D']
+for axx, label in zip(ax.flatten(), labels):
+    axx.text(0.02, 0.95, label, transform=axx.transAxes,
+            fontsize=34, fontweight='bold', va='top', ha='left')
+
         
-
-
-        
-
+ax[1,0].text(0.42, 0.87, 'St $\in$ [0.01, 1]', transform=ax[1,0].transAxes,
+        fontsize=25, va='top', ha='left', c=colors['planetesimal'])
 # set legend
-ax[0,0].plot([],[], lw=lw, c=colors[0], label='Fragile')
-ax[0,0].plot([],[], lw=lw, c=colors[1], label='Rigid')
-ax[0,0].legend(ncol=2, loc='upper left')
+ax[0,0].plot([],[], lw=lw, c=colors['fragile'], label='Fragile')
+ax[0,0].plot([],[], lw=lw, c=colors['rigid'], label='Rigid')
+ax[0,0].legend(ncol=1, loc='upper center')
 
 # set logarithmic scale
 ax[0,0].set_yscale('log')
@@ -274,7 +264,7 @@ ax[0,0].set_xscale('log')
 
 # set limits
 ax[0,0].set_ylim(ymin, ymax)
-ax[0,0].set_xlim(0.00005, 5)
+ax[0,0].set_xlim(0.00004, 5)
 
 # set ticks
 ax[0,0].set_xticks([0.0001, 0.001, 0.01, 0.1, 1])
@@ -282,3 +272,6 @@ ax[0,0].set_yticks([0.001, 0.01, 0.1, 1, 10])
 
 plt.subplots_adjust(wspace=0.05, hspace=0.15)
 plt.show()
+
+# save figure
+fig.savefig(f'density_vs_size.pdf', dpi=300, bbox_inches='tight', format='pdf')
