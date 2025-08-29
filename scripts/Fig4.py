@@ -128,7 +128,7 @@ for i in range(len(t_eval)):
 from scipy import interpolate
 # --- indicate minimum sigmad for planetesimal formation
 # where to find disk data
-testfile = '../disk/PE/disk_midalpha/gap/shallow/'
+testfile = '../disk/'
 
 # read data from testfile
 t = (np.loadtxt(testfile + 'time.dat',dtype=float)*u.s).to(u.Myr) # time in Myr
@@ -148,8 +148,6 @@ Zcrit = 0.05
 
 
 # make plot
-#%%
-
 fig, ax = plt.subplots(nrows=3, ncols=2, figsize=(25, 18), sharey=True)
 
 # color to indicate fragile and rigid
