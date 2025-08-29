@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jul  6 15:30:08 2025
-
-@author: gurrutxaga
-"""
 # reproduce figure 6 (or Supplementary figure 2)
 # before running the script, copy "local_data_reduced/" directory to ../outputs/.
 # for supplementary plot, copy "local_topheavy_data_reduced/" directory to ../outputs/.
