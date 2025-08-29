@@ -10,7 +10,7 @@ from astropy import units as u
 
 
 
-# read local data and calculate dust surface denisty
+# read local data and calculate dust surface density
 
 output_dir = "../outputs/local_data_reduced"
 
