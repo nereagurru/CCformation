@@ -27,7 +27,7 @@ for i, file_path in enumerate(all_files[1:]):
         t_arr[i] = f['snapt'][...]
 
 # time for evaluating dust surface density
-t_CAI = 0.19
+t_CAI = 0.19 # value in Myr
 t_eval = np.array([2., 2.3, 3.5])
 t_eval += t_CAI
 
@@ -148,12 +148,13 @@ Zcrit = 0.05
 
 
 # make plot
+#%%
 
 fig, ax = plt.subplots(nrows=3, ncols=2, figsize=(25, 18), sharey=True)
 
 # color to indicate fragile and rigid
 colors = {'fragile':'#3274B5', 'rigid':'#8B551B', 'planetesimal':'blueviolet'}
-ls_arr = ['-', '-', '-']#[':', '--', '-']
+ls_arr = ['-', '-', '-']
 lw = 8
 #Label panel 
 labels = ['A', 'B', 'C']
@@ -168,7 +169,7 @@ for idx, ls in enumerate(ls_arr):
 
     ax[idx, 0].plot(r_evall[:,idx],
                (sigmadl[:, idx]-sigmadl_fri[:, idx]),
-               colors['fragile'], ls=ls, lw=lw)
+               c=colors['fragile'], ls=ls, lw=lw)
     
 
     
@@ -180,19 +181,19 @@ for idx, ls in enumerate(ls_arr):
 
     ax[idx,0].plot(r_evall[:,idx],
                sigmadl_fri[:, idx], 
-               ls=ls, c='#8B551B', lw=lw)
+               ls=ls, c=colors['rigid'], lw=lw)
     
     ax[idx,1].plot(r_eval,
                sigmadg_fri[:, idx],
-               ls=ls, c='#8B551B', lw=lw)
+               ls=ls, c=colors['rigid'], lw=lw)
     #ax[idx,0].plot(r_evall[:,idx],
     #           sigmadl[:, idx], 
     #           ls=ls, c='k', lw=lw)
-    ax[idx,0].plot(r_evall[:,idx], Zcrit*f_sigma(t_eval[idx], r_evall[:,idx]), alpha=0.5, c='blueviolet', 
+    ax[idx,0].plot(r_evall[:,idx], Zcrit*f_sigma(t_eval[idx], r_evall[:,idx]), alpha=0.5, c=colors['planetesimal'], 
                lw=lw/2, ls=ls, zorder=-1)
 
     # indicate time
-    ax[idx,1].text(0.75, 0.92, f'{t_eval[idx]-0.19:.1f} Myr', transform=ax[idx,1].transAxes,
+    ax[idx,1].text(0.75, 0.92, f'{t_eval[idx]-t_CAI:.1f} Myr', transform=ax[idx,1].transAxes,
                    fontsize=30, va='top', ha='left')
     
     
@@ -202,15 +203,15 @@ for idx, ls in enumerate(ls_arr):
     
 # text for planetesimal formation
 ax[0,0].text(0.35, 0.87, 'Planetesimal formation threshold', transform=ax[0,0].transAxes,
-        fontsize=25, va='top', ha='left', c='blueviolet')
+        fontsize=25, va='top', ha='left', c=colors['planetesimal'])
 
 ymin, ymax = 10**-5, 20
 
 rmax = r_evall[1:-1, 1][sigmadl[1:-1, 1].argmax()]
-ax[1,0].axvline(ymin=ymin, ymax=ymax, x=rmax, c='blueviolet', lw=lw/2, ls='-', alpha=0.5, zorder=-1)
+ax[1,0].axvline(ymin=ymin, ymax=ymax, x=rmax, c=colors['planetesimal'], lw=lw/2, ls='-', alpha=0.5, zorder=-1)
 
 rmax = r_evall[1:-1, 2][sigmadl[1:-1, 2].argmax()]
-ax[2,0].axvline(ymin=ymin, ymax=ymax, x=rmax, c='blueviolet', lw=lw/2, ls='-', alpha=0.5, zorder=-1)
+ax[2,0].axvline(ymin=ymin, ymax=ymax, x=rmax, c=colors['planetesimal'], lw=lw/2, ls='-', alpha=0.5, zorder=-1)
 
 
 
