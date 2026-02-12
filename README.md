@@ -1,4 +1,4 @@
-This readme file was generated on 2026-002-12 by Nerea Gurrutxaga
+This readme file was generated on 2025-07-06 by Nerea Gurrutxaga
 
 ## GENERAL INFORMATION
 
@@ -12,10 +12,15 @@ Institution: Max Planck Institute for Solar System Research
 Email: gurrutxaga@mps.mpg.de
 
 
+## SHARING/ACCESS Code
+
+Upon acceptance, this code will be published as a formal release on Zenodo.
+
 ## FILE OVERVIEW
 
 Main files:
 - src: all .F90 programs
+- disk: data from diskevol (download data inside disk file to run this code)
 - setup: compilation and parameter information
 - outputs: for data storage
 - scripts: generate all figures from the main manuscript 
@@ -39,23 +44,4 @@ This uses the setup files from the default run in `/setups/global/`
  An executable in the name of the setup file will be created in the root directory which is `global` in this case.
 
 parameter file: setups/global/setup.par
-
-
-## To run the code: 
-
-in the /setups/global/ file: `export OMP_NUM_THREADS=number_of_CPUs`
-
-in the /setups/global/ file: `./global setup.par`
-
-To clear the run
-
-in the /setups/global/ file: `make clean`
-
-The global run generates data in the outputs/global/feeding_data that is necessary to run a local simulation:
-
-in the /setups/local/ file: `make`
-in the /setups/local/ file: `./local setup.par`
-in the /setups/local/ file: `make clean`
-
-Alternatively, feeding_data/*.h5 files can be manually copied from provided data.
 
