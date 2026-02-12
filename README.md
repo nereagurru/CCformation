@@ -1,4 +1,4 @@
-This readme file was generated on 2025-07-06 by Nerea Gurrutxaga
+This readme file was generated on 2026-002-12 by Nerea Gurrutxaga
 
 ## GENERAL INFORMATION
 
@@ -12,15 +12,10 @@ Institution: Max Planck Institute for Solar System Research
 Email: gurrutxaga@mps.mpg.de
 
 
-## SHARING/ACCESS Code
-
-Upon acceptance, this code will be published as a formal release on Zenodo.
-
 ## FILE OVERVIEW
 
 Main files:
 - src: all .F90 programs
-- disk: data from diskevol (download data inside disk file to run this code)
 - setup: compilation and parameter information
 - outputs: for data storage
 - scripts: generate all figures from the main manuscript 
