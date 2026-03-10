@@ -14,7 +14,9 @@ Email: gurrutxaga@mps.mpg.de
 
 ## SHARING/ACCESS Code
 
-Upon acceptance, this code will be published as a formal release on Zenodo.
+Data of the paper is available in Zenodo. 
+- doi: 10.5281/zenodo.17176296
+- link: https://zenodo.org/records/17176296
 
 ## FILE OVERVIEW
 
