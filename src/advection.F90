@@ -56,7 +56,7 @@ module advection
          call vel_rd(particle, vr, vn, realtime)
          call vel_rad(particle, velr, vr, dtime, realtime)
          ! transport particle radially
-         particle%rdis = particle%rdis + vr * dtime 
+         particle%rdis = particle%rdis + velr * dtime 
 
          ! is it still outside evaporation radius?
          if (particle%rdis > smallr) then
@@ -107,7 +107,7 @@ module advection
 
          call vel_rd(particle, vr, vn, realtime)
          call vel_rad(particle, velr, vr, dtime, realtime)
-         particle%rdis = particle%rdis + vr * dtime 
+         particle%rdis = particle%rdis + velr * dtime 
 
          if (particle%rdis > smallr) then
             particle%stnr = stokesnr(particle,realtime)
