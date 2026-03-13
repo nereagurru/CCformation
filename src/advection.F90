@@ -177,7 +177,7 @@ module advection
       vD1 = dr / dtime
       vD2 = (visc / (1. + particle%stnr**2) / densg(particle%rdis,particle%zdis, realtime)) * &
             (ddensgdr(particle%rdis,particle%zdis, realtime))
-      velr = vD1 + vD2
+      velr = vD1 + vD2 + vr
 
       particle%velr = vr
       return
