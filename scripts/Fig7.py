@@ -177,17 +177,29 @@ boolr = (r_arr >6.5)&(rigid==0) # no pure rigids; they do not get trapped in the
 
 
 ax.hist([1.-fri_arr, 1.-rigid[boolr]], bins=range_,
-        weights=[Mplt_arr * u.g.to(u.Mearth),np.full(np.sum(boolr), mswarm_out* u.g.to(u.Mearth))],
-        edgecolor='lightgray', lw=2, color=[color['planetesimal'], 'lightcyan'], stacked=True, alpha=0.8)
+        weights=[Mplt_arr * u.g.to(u.Mearth), np.full(np.sum(boolr), mswarm_out* u.g.to(u.Mearth))],
+        edgecolor='lightgray', lw=2, color=[color['planetesimal'], 'lightskyblue'], stacked=True, alpha=0.8)
 Mplt_tot = np.nansum(Mplt_arr)*u.g.to(u.Mearth)
 ax.text(x=0, y=1.1*Mplt_tot, s='total planetesimal mass', color=color['planetesimal'])
+
 xmin, xmax = -0.05, 1.05
+
 ax.hlines(xmin=xmin, xmax=xmax, y=Mplt_tot,
           lw=5, color=color['planetesimal'])
 
+# asteroid belt
+text = ax.text(x=0, y=1.15*(5e-4), s='asteroid belt', color='k')
+text.set_bbox(dict(facecolor='white', alpha=0.5))
 ax.hlines(xmin=xmin, xmax=xmax, y=5e-4,
-          lw=5, color='k')
-ax.text(x=0, y=1.1*(5e-4), s='current asteroid belt', color='k')
+          lw=5, color='k', zorder=10)
+
+# asteroid belt
+text = ax.text(x=0, y=0.0225, s='Kuiper belt', color='k')
+text.set_bbox(dict(facecolor='white', alpha=0.5))
+ax.hlines(xmin=xmin, xmax=xmax, y=0.02,
+          lw=5, color='k', zorder=10)
+
+#text.
 ax.set_yscale('log')
 ax.set_ylim(10**-4, 1.)
 
