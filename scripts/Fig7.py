@@ -193,13 +193,13 @@ text.set_bbox(dict(facecolor='white', alpha=0.5))
 ax.hlines(xmin=xmin, xmax=xmax, y=5e-4,
           lw=5, color='k', zorder=10)
 
-# asteroid belt
+# Kuiper belt
 text = ax.text(x=0, y=0.0225, s='Kuiper belt', color='k')
 text.set_bbox(dict(facecolor='white', alpha=0.5))
 ax.hlines(xmin=xmin, xmax=xmax, y=0.02,
           lw=5, color='k', zorder=10)
 
-#text.
+
 ax.set_yscale('log')
 ax.set_ylim(10**-4, 1.)
 
